@@ -30,9 +30,20 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.component.Component;
+import org.firstinspires.ftc.teamcode.state.State;
+import org.firstinspires.ftc.teamcode.subClass.Util;
+
+import java.util.ArrayList;
 
 @TeleOp(name = "Main OpMode", group = "Main")
 public class Main extends OpMode {
+
+    private final ElapsedTime runtime = new ElapsedTime();
+    private final ArrayList<Component> components = new ArrayList<>();
+    private final State state = new State();
 
     /*
      * This is executed once after the driver presses INIT.
@@ -40,6 +51,7 @@ public class Main extends OpMode {
      */
     @Override
     public void init() {
+        state.stateInit();
     }
 
     /*
@@ -48,6 +60,11 @@ public class Main extends OpMode {
      */
     @Override
     public void init_loop() {
+        state.stateReset();
+        components.forEach(component -> {
+            component.readSensors(state);
+        });
+        Util.SendLog(state, telemetry);
     }
 
     /*
@@ -56,6 +73,8 @@ public class Main extends OpMode {
      */
     @Override
     public void start() {
+        runtime.reset();
+        state.stateInit();
     }
 
     /*
@@ -64,7 +83,15 @@ public class Main extends OpMode {
      */
     @Override
     public void loop() {
+        state.stateReset();
+        components.forEach(component -> {
+            component.readSensors(state);
+        });
 
+        components.forEach(component -> {
+            component.applyState(state);
+        });
+        Util.SendLog(state, telemetry);
     }
 
     /*
