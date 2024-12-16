@@ -25,6 +25,9 @@ public class Const {
                         RevHubOrientationOnRobot.LogoFacingDirection.UP,
                         RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
                 );
+        public static class AutonomousDrive {
+
+        }
     }
 
     public static class Other{
