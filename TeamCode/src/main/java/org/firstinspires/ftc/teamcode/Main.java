@@ -91,9 +91,9 @@ public class Main extends OpMode {
         });
         state.currentMode = State.Mode.DRIVE;
         state.driveState.imuReset = gamepad1.start;
-        state.controllerState.leftStickX = Util.applyDeadZone(gamepad1.left_stick_x);
-        state.controllerState.leftStickY = Util.applyDeadZone(gamepad1.left_stick_y);
-        state.controllerState.rightStickX = Util.applyDeadZone(gamepad1.right_stick_x);
+        state.driveState.xSpeed = Util.applyDeadZone(gamepad1.left_stick_x);
+        state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
+        state.driveState.rotation= Util.applyDeadZone(gamepad1.right_stick_x);
 
         components.forEach(component -> {
             component.applyState(state);
