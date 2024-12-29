@@ -34,9 +34,9 @@ import static org.firstinspires.ftc.teamcode.lib.roadrunner.drive.DriveConstants
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(-0.02, 0.001, 0);
 
-    public static double LATERAL_MULTIPLIER = 1;
+    public static double LATERAL_MULTIPLIER = 1.156;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -82,6 +82,10 @@ public class SampleMecanumDrive extends MecanumDrive {
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
@@ -265,6 +269,16 @@ public class SampleMecanumDrive extends MecanumDrive {
         leftRear.setPower(v1);
         rightRear.setPower(v2);
         rightFront.setPower(v3);
+//        if(v2 > 0){
+//            rightRear.setPower(v2 * 0.9);
+//        }else{
+//            rightRear.setPower(v2 * 0.95);
+//        }
+//        if(v3 > 0){
+//            rightFront.setPower(v3 * 0.9);
+//        }else{
+//            rightFront.setPower(v3 * 0.95);
+//        }
     }
 
     @Override
