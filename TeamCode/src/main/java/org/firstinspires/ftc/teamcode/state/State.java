@@ -51,7 +51,6 @@ public class State {
 
         public double currentHandRotationServoPosition = 0.0;
         public double portHandRotationServoNumber = 0;
-
     }
 
     // Instances of the sub-classes
