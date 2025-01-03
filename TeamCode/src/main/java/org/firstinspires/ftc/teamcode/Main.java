@@ -32,10 +32,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.component.Arm;
+import org.firstinspires.ftc.teamcode.component.Outtake;
 import org.firstinspires.ftc.teamcode.component.Component;
 import org.firstinspires.ftc.teamcode.component.Drive;
-import org.firstinspires.ftc.teamcode.component.Slider;
+import org.firstinspires.ftc.teamcode.component.Intake;
 import org.firstinspires.ftc.teamcode.state.State;
 import org.firstinspires.ftc.teamcode.subClass.Util;
 
@@ -56,8 +56,8 @@ public class Main extends OpMode {
     public void init() {
         state.stateInit();
         components.add(new Drive(hardwareMap));
-        components.add(new Slider(hardwareMap));
-        components.add(new Arm(hardwareMap));
+        components.add(new Intake(hardwareMap));
+        components.add(new Outtake(hardwareMap));
     }
 
     /*
@@ -101,7 +101,7 @@ public class Main extends OpMode {
         state.driveState.charge = gamepad1.right_bumper;
         state.driveState.discharge = gamepad1.left_bumper;
         state.driveState.sliderIsOut = gamepad1.a;
-        state.driveState.verticalRotation = gamepad1.a;
+        state.driveState.verticalRotation = gamepad1.y;
         state.driveState.liftIsDown = gamepad1.a;
         state.driveState.intakeRotation = gamepad1.b;
 

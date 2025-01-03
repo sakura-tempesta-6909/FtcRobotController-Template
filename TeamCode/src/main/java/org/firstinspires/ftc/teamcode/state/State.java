@@ -41,11 +41,23 @@ public class State {
         public boolean handIsOpen;
         public boolean handIsUP;
         public boolean handIsRolling;
+        public double sliderLeftPosition;
+        public double sliderRightPosition;
+    }
+    public static class SlideState {
+        public double currentIntakeVerticalRotationServoPosition = 0.0;
+        public double currentLastSliderSlideRightServoPosition = 0.0;
+        public double portIntakeVerticalRotationServoNumber = 0;
+
+        public double currentHandRotationServoPosition = 0.0;
+        public double portHandRotationServoNumber = 0;
+
     }
 
     // Instances of the sub-classes
     // サブクラスのインスタンス
     public DriveState driveState = new DriveState();
+    public SlideState slideState = new SlideState();
 
     public void stateInit() {
         // General
@@ -72,7 +84,10 @@ public class State {
         this.driveState.handIsRolling = false;
         this.driveState.charge = false;
         this.driveState.discharge = false;
-
+        this.slideState.currentLastSliderSlideRightServoPosition = 0.0;
+        this.slideState.currentIntakeVerticalRotationServoPosition  = 0.0;
+        this.driveState.sliderLeftPosition = 0;
+        this.driveState.sliderRightPosition = 0;
     }
 
     public void stateReset() {
@@ -81,5 +96,8 @@ public class State {
         this.driveState.xSpeed = 0.0;
         this.driveState.ySpeed = 0.0;
         this.driveState.rotation = 0.0;
+
+        this.slideState.currentLastSliderSlideRightServoPosition = 0.0;
+        this.slideState.currentIntakeVerticalRotationServoPosition  = 0.0;
     }
 }
