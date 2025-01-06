@@ -34,7 +34,7 @@ public class Intake implements Component {
 
         intakeHorizontalRotation = hardwareMap.get(Servo.class, Const.intake.Name.horizontalRotation);
         intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
-        intakeHorizontalRotation.setDirection(Servo.Direction.FORWARD);
+        intakeHorizontalRotation.setDirection(Servo.Direction.REVERSE);
 
         intakeVerticalRotation =  hardwareMap.get(Servo.class, Const.intake.Name.verticalRotation);
         intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
@@ -72,11 +72,13 @@ public class Intake implements Component {
 
     @Override
     public void readSensors(State state) {
-        state.slideState.currentLastSliderSlideRightServoPosition = intakeSliderRight.getPosition();
+
     }
 
     @Override
     public void applyState(State state) {
+
+        intakeHorizontalRotation.setDirection(Servo.Direction.FORWARD);
 
         if (state.driveState.charge){
             intakeCollectorRight.setPower(Const.intake.Power.ArmPowerCharge);
@@ -95,29 +97,23 @@ public class Intake implements Component {
             intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
         }
 
-        if (state.driveState.sliderIsOut){
+        if (state.controllerState.robotCharge) {
+            intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
             intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
             intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
-        }else{
+            if(!state.driveState.charge){
+                intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
+                intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
+            }else{
+                intakeLiftLeft.setPosition(Const.intake.Position.liftLowest);
+                intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
+            }
+        } else {
+            intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
             intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
             intakeSliderRight.setPosition(Const.intake.Position.sliderInit);
-        }
-
-        if (state.driveState.liftIsDown && !state.driveState.charge){
-            intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
-            intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
-        } else if(state.driveState.liftIsDown) {
-            intakeLiftLeft.setPosition(Const.intake.Position.liftLowest);
-            intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
-        }else{
             intakeLiftLeft.setPosition(Const.intake.Position.liftInit);
             intakeLiftRight.setPosition(Const.intake.Position.liftInit);
-        }
-
-        if (state.driveState.verticalRotation){
-            intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
-        }else{
-            intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
         }
 
     }

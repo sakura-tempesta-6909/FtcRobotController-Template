@@ -54,11 +54,11 @@ public class Const {
         }
         public static class Position{
             public static final double collectorInit = 0;
-            public static final double collectorOpen = 1;
+            public static final double collectorOpen = 0.2;
             public static final double liftInit = 0;
             public static final double liftUp = 1;
             public static final double rotationInit = 0;
-            public static final double rotationUp = 1;
+            public static final double rotationUp = 0.6;
             public static final int sliderInit = 0;
             public static final int sliderUp = 2000;
         }
@@ -76,10 +76,6 @@ public class Const {
             public static final String horizontalRotation = "intakeHorizontalRotation";
             public static final String liftLeft = "intakeLiftLeft";
             public static final String liftRight = "intakeLiftRight";
-
-            public static final String climbLeft = "climbLeft";
-            public static final String climbRight = "climbRight";
-
             public static final String verticalRotation = "intakeVerticalRotation";
 
         }
@@ -89,10 +85,9 @@ public class Const {
             public static final DcMotorSimple.Direction collectorLeftInit = DcMotorSimple.Direction.FORWARD;
             public static final DcMotorSimple.Direction collectorRightInit = DcMotorSimple.Direction.REVERSE;
 
-            public static final DcMotorSimple.Direction intakeHorizontalRotation = DcMotorSimple.Direction.FORWARD;
+            public static final DcMotorSimple.Direction HorizontalRotation = DcMotorSimple.Direction.FORWARD;
 
             public static final Servo.Direction liftLeft = Servo.Direction.REVERSE;
-            public static final Servo.Direction getIntakeLiftRight = Servo.Direction.FORWARD;
             public static final Servo.Direction liftRight = Servo.Direction.FORWARD;
 
             public static final DcMotor.Direction climbLeft = DcMotor.Direction.FORWARD;
@@ -117,10 +112,11 @@ public class Const {
             public static final double sliderInit = 0;
             public static final double sliderHead = 0.25;
             public static final double liftInit = 0;
-            public static final double verticalRotationInit = 0;
+            public static final double verticalRotationUpper = 0.1;
+            public static final double verticalRotationInit = 0.66;
             public static final double verticalRotationSide = 1;
             public static final double horizontalRotationInit = 0;
-            public static final double horizontalRotationMoving = 0.5;
+            public static final double horizontalRotationMoving = 0.3;
             public static final double liftLimited = 0.6;
             public static final double liftLowest = 0.74;
         }

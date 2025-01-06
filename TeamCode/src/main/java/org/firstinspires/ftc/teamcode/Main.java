@@ -43,7 +43,6 @@ import java.util.ArrayList;
 
 @TeleOp(name = "Main OpMode", group = "Main")
 public class Main extends OpMode {
-
     private final ElapsedTime runtime = new ElapsedTime();
     private final ArrayList<Component> components = new ArrayList<>();
     private final State state = new State();
@@ -52,6 +51,7 @@ public class Main extends OpMode {
      * This is executed once after the driver presses INIT.
      * ドライバーがINITを押した後、1度実行される
      */
+
     @Override
     public void init() {
         state.stateInit();
@@ -72,7 +72,6 @@ public class Main extends OpMode {
         });
         Util.SendLog(state, telemetry);
     }
-
     /*
      * This is executed once at the start.
      * 開始時に一度だけ実行される
@@ -100,17 +99,26 @@ public class Main extends OpMode {
         state.driveState.rotation= Util.applyDeadZone(gamepad1.right_stick_x);
         state.driveState.charge = gamepad1.right_bumper;
         state.driveState.discharge = gamepad1.left_bumper;
-        state.driveState.sliderIsOut = gamepad1.a;
-        state.driveState.verticalRotation = gamepad1.y;
-        state.driveState.liftIsDown = gamepad1.a;
+//        state.driveState.sliderIsOut = gamepad1.a;
+//        state.driveState.verticalRotation = gamepad1.a;
+//        state.driveState.liftIsDown = gamepad1.a;
+
+        state.controllerState.currentAButtonState = gamepad1.a;
         state.driveState.intakeRotation = gamepad1.b;
 
-//        state.driveState.climb = gamepad1.a;
 
-        state.driveState.sliderIsUp = gamepad2.x;
-        state.driveState.handIsUP = gamepad2.y;
-        state.driveState.handIsRolling = gamepad2.a;
-        state.driveState.handIsOpen = gamepad2.b;
+        state.slideState.verticalRotationUpper = gamepad1.y;
+
+//        state.driveState.sliderIsUp = gamepad2.x;
+        state.driveState.outtakeCollectorIsUP = gamepad2.y;
+        state.driveState.outtakeCollectorIsRolling = gamepad2.y;
+        state.driveState.outtakeCollectorIsOpen = gamepad2.b;
+
+        if (state.controllerState.currentAButtonState && !state.controllerState.previousAButtonState) {
+            state.controllerState.robotCharge = !state.controllerState.robotCharge;
+        }
+        state.controllerState.previousAButtonState = state.controllerState.currentAButtonState;
+
         components.forEach(component -> {
             component.applyState(state);
         });

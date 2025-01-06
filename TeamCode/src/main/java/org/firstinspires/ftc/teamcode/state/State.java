@@ -38,9 +38,9 @@ public class State {
         public  boolean liftIsDown;
 
         public boolean sliderIsUp;
-        public boolean handIsOpen;
-        public boolean handIsUP;
-        public boolean handIsRolling;
+        public boolean outtakeCollectorIsOpen;
+        public boolean outtakeCollectorIsUP;
+        public boolean outtakeCollectorIsRolling;
         public double sliderLeftPosition;
         public double sliderRightPosition;
     }
@@ -51,12 +51,23 @@ public class State {
 
         public double currentHandRotationServoPosition = 0.0;
         public double portHandRotationServoNumber = 0;
+        public boolean verticalRotationUpper = false;
+
     }
+
+
+    public static class ControllerState {
+        public boolean previousAButtonState; // To track the previous state of gamepad1.a
+        public boolean robotCharge; // To toggle the verticalRotation position
+        public boolean currentAButtonState;
+    }
+
 
     // Instances of the sub-classes
     // サブクラスのインスタンス
     public DriveState driveState = new DriveState();
     public SlideState slideState = new SlideState();
+    public ControllerState controllerState = new ControllerState();
 
     public void stateInit() {
         // General
@@ -78,15 +89,21 @@ public class State {
         this.driveState.Target = 0;
         this.driveState.liftIsDown = false;
         this.driveState.sliderIsUp = false;
-        this.driveState.handIsOpen = false;
-        this.driveState.handIsUP = false;
-        this.driveState.handIsRolling = false;
+        this.driveState.outtakeCollectorIsOpen = false;
+        this.driveState.outtakeCollectorIsUP = false;
+        this.driveState.outtakeCollectorIsRolling = false;
         this.driveState.charge = false;
         this.driveState.discharge = false;
         this.slideState.currentLastSliderSlideRightServoPosition = 0.0;
         this.slideState.currentIntakeVerticalRotationServoPosition  = 0.0;
         this.driveState.sliderLeftPosition = 0;
         this.driveState.sliderRightPosition = 0;
+        this.slideState.verticalRotationUpper = false;
+
+
+        this.controllerState.previousAButtonState =false;
+        this.controllerState.robotCharge =false;
+        this.controllerState.currentAButtonState = false;
     }
 
     public void stateReset() {

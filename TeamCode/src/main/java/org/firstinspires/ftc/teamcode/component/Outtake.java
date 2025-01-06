@@ -23,7 +23,7 @@ public class Outtake implements Component {
         outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
 
         outtakeLiftRight = hardwareMap.get(Servo.class, Const.outtake.Name.liftRight);
-        outtakeLiftRight.setDirection(Servo.Direction.REVERSE);
+        outtakeLiftRight.setDirection(Servo.Direction.FORWARD);
         outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
 
         outtakeRotation = hardwareMap.get(Servo.class, Const.outtake.Name.Rotation);
@@ -68,7 +68,8 @@ public class Outtake implements Component {
     @Override
     public void readSensors(State state) {
         state.slideState.portHandRotationServoNumber = outtakeRotation.getPortNumber();
-        state.slideState.currentHandRotationServoPosition = outtakeRotation.getPosition();
+        state.slideState.currentHandRotationServoPosition = outtakeRotation.getController().getServoPosition(outtakeRotation.getPortNumber());
+//                outtakeRotation.getPosition();
         state.driveState.sliderLeftPosition = outtakeSliderLeft.getCurrentPosition();
         state.driveState.sliderRightPosition = outtakeSliderRight.getCurrentPosition();
 
@@ -101,7 +102,7 @@ public class Outtake implements Component {
 //            climbRight.setPower(0.5);
 //        }
 
-        if (state.driveState.handIsUP){
+        if (state.driveState.outtakeCollectorIsUP){
             outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
             outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
         }else{
@@ -109,13 +110,13 @@ public class Outtake implements Component {
             outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
         }
 
-           if (state.driveState.handIsOpen){
-                   outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);
-           }else{
-                   outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
-           }
+        if (state.driveState.outtakeCollectorIsOpen){
+            outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);
+        }else{
+            outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
+        }
 
-        if (state.driveState.handIsRolling){
+        if (state.driveState.outtakeCollectorIsRolling){
             outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
         }else{
             outtakeRotation.setPosition(Const.outtake.Position.rotationInit);
