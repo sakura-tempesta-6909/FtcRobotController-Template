@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.state.State;
 import org.firstinspires.ftc.teamcode.subClass.Const;
+
 public class Outtake implements Component {
     public final Servo outtakeCollector;
     public final Servo outtakeLiftLeft;
@@ -13,6 +14,7 @@ public class Outtake implements Component {
     public final DcMotor outtakeSliderLeft;
     public final DcMotor outtakeSliderRight;
     public final Servo outtakeRotation;
+
     public Outtake(HardwareMap hardwareMap) {
         outtakeCollector = hardwareMap.get(Servo.class, Const.outtake.Name.Collector);
         outtakeCollector.setDirection(Servo.Direction.REVERSE);
@@ -72,31 +74,31 @@ public class Outtake implements Component {
 
     @Override
     public void applyState(State state) {
-         if (state.driveState.isSliderUp) {
-             outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp);
-             outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp);
-             outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
-             outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
-         }
-         //スライダーが調整中なのでコメントアウト中
-//         }else{
-//                 SLideLeft.setTargetPosition(0);
-//                 SLideRight.setTargetPosition(0);
-//                 SLideLeft.setPower(0.5);
-//                 SLideRight.setPower(0.5);
-//         }
-
-        if (state.driveState.isOuttakeCollectorOpen){
+        switch (state.outtakeState.mode){
+            case DOWN:
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderInit);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
+                outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
+                outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                break;
+            case UP:
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp);
+                outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
+                outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                break;
+        }
+        if (state.driveState.isOuttakeCollectorOpen) {
             outtakeCollector.setPosition(Const.outtake.Position.collectorClose);
-        }else{
+        } else {
             outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
         }
 
-        if (state.outtakeState.outtakeCharge){
+        if (state.outtakeState.outtakeCharge) {
             outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
             outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
             outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
-        }else{
+        } else {
             outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
             outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
             outtakeRotation.setPosition(Const.outtake.Position.rotationInit);

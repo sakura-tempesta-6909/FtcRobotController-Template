@@ -92,13 +92,26 @@ public class Intake implements Component {
                 // 全てが初期位置
                 intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
                 intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
+                intakeLiftLeft.setPosition(Const.intake.Position.liftInit);
+                intakeLiftRight.setPosition(Const.intake.Position.liftInit);
                 intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
                 intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
                 intakeSliderRight.setPosition(Const.intake.Position.sliderInit);
-                intakeLiftLeft.setPosition(Const.intake.Position.liftInit);
-                intakeLiftRight.setPosition(Const.intake.Position.liftInit);
                 break;
             case STOP:
+                // 回収機構はストップ
+                intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
+                intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
+                // リフトは前に出ている状態
+                intakeLiftLeft.setPosition(Const.intake.Position.liftInit);
+                intakeLiftRight.setPosition(Const.intake.Position.liftInit);
+                // 縦角度①も前に出ている状態
+                intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
+                // スライダーは前に出ている状態
+                intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
+                intakeSliderRight.setPosition(Const.intake.Position.sliderInit);
+                break;
+            case FINDING:
                 // 回収機構はストップ
                 intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
                 intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);

@@ -46,9 +46,10 @@ public class Main extends OpMode {
     private final ElapsedTime runtime = new ElapsedTime();
     private final ArrayList<Component> components = new ArrayList<>();
     private final State state = new State();
-    private Boolean previousGamePad1A = false;
     private Boolean previousGamePad1B = false;
     private Boolean previousGamePad2Y = false;
+    private Boolean previousGamepad1Trigger = false;
+    private Boolean isFinding = false;
 
     /*
      * This is executed once after the driver presses INIT.
@@ -106,16 +107,22 @@ public class Main extends OpMode {
         state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
         state.driveState.rotation = Util.applyDeadZone(gamepad1.right_stick_x);
 
+        if((Util.applyDeadZone(gamepad1.right_trigger) > 0.0 || Util.applyDeadZone(gamepad1.left_trigger) > 0.0) != previousGamepad1Trigger){
+            isFinding = !isFinding;
+        }
         //インテイクの状態
         if (gamepad1.right_bumper) {
             state.intakeState.mode = State.IntakeMode.CHARGE;
         } else if (gamepad1.left_bumper) {
             state.intakeState.mode = State.IntakeMode.DISCHARGE;
+        } else if (isFinding) {
+            state.intakeState.mode = State.IntakeMode.FINDING;
+        } else {
+            state.intakeState.mode = State.IntakeMode.STOP;
         }
 
         // 回収するサンプルの向きを変える
         if (gamepad1.b && !previousGamePad1B) {
-            state.intakeState.intakeCharge = !state.intakeState.intakeCharge;
             switch (state.intakeState.orientation) {
                 case HORIZONTAL:
                     state.intakeState.orientation = State.IntakeOrientation.VERTICAL;
@@ -128,10 +135,13 @@ public class Main extends OpMode {
 
         state.driveState.isOuttakeCollectorOpen = gamepad2.b;
 
-        //intakeChargeのトグル
-        if (gamepad1.a && !previousGamePad1A) {
-            state.intakeState.intakeCharge = !state.intakeState.intakeCharge;
+        // スライダーを上げる
+        if (gamepad2.dpad_down) {
+            state.outtakeState.mode = State.SliderMode.DOWN;
+        } else if (gamepad2.dpad_up) {
+            state.outtakeState.mode = State.SliderMode.UP;
         }
+
         //outtakeChargeのトグル
         if (gamepad2.y && !previousGamePad2Y) {
             state.outtakeState.outtakeCharge = !state.outtakeState.outtakeCharge;
@@ -142,7 +152,6 @@ public class Main extends OpMode {
         });
 
         //ゲームパッドの状態の保存
-        previousGamePad1A = gamepad1.a;
         previousGamePad1B = gamepad1.b;
         previousGamePad2Y = gamepad2.y;
 

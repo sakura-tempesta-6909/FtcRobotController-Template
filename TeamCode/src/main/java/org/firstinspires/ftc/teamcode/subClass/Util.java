@@ -6,6 +6,9 @@ import org.firstinspires.ftc.teamcode.state.State;
 public class Util {
     public static void SendLog(State state, Telemetry telemetry) {
         telemetry.addData("CurrentMode", state.currentMode.toString());
+        telemetry.addData("SliderMode", state.outtakeState.mode.toString());
+        telemetry.addData("IntakeMode", state.intakeState.mode.toString());
+        telemetry.addData("IntakeOrientation", state.intakeState.orientation.toString());
     }
 
 

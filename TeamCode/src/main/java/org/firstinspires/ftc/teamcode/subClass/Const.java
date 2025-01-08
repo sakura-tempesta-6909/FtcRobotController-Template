@@ -60,7 +60,7 @@ public class Const {
             public static final double rotationInit = 0;
             public static final double rotationUp = 0.6;
             public static final int sliderInit = 0;
-            public static final int sliderUp = 2000;
+            public static final int sliderUp = 1800;
         }
         public static class Power{
             public static final double sliderInit = 0;
