@@ -28,6 +28,7 @@ public class State {
 
     //インテイクの状態
     public enum IntakeMode {
+        INIT,
         STOP, // 何もしない
         CHARGE, // 回収
         DISCHARGE, // 吐き出し

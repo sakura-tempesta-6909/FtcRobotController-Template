@@ -8,12 +8,17 @@ import org.firstinspires.ftc.teamcode.state.State;
 import org.firstinspires.ftc.teamcode.subClass.Const;
 
 public class Intake implements Component {
+    // サンプルの回収 → intakeCollector
     private final CRServo intakeCollectorLeft;
     private final CRServo intakeCollectorRight;
+    // インテイクスライダー → intakeSlider
     public final Servo intakeSliderLeft;
     public final Servo intakeSliderRight;
+    // インテイクの横角度(サンプルの向き) → intakeHorizontalRotation
     public final Servo intakeHorizontalRotation;
+    // インテイクの縦角度① → intakeVerticalRotation
     public final Servo intakeVerticalRotation;
+    // インテイクの縦角度② → intakeLift
     public final Servo intakeLiftLeft;
     public final Servo intakeLiftRight;
 
@@ -82,23 +87,59 @@ public class Intake implements Component {
     @Override
     public void applyState(State state) {
 
-        //インテイクのチャージ
         switch (state.intakeState.mode) {
-            case STOP:
+            case INIT:
+                // 全てが初期位置
                 intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
                 intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
+                intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
+                intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
+                intakeSliderRight.setPosition(Const.intake.Position.sliderInit);
+                intakeLiftLeft.setPosition(Const.intake.Position.liftInit);
+                intakeLiftRight.setPosition(Const.intake.Position.liftInit);
+                break;
+            case STOP:
+                // 回収機構はストップ
+                intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
+                intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
+                // リフトは前に出ている状態
+                intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
+                intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
+                // 縦角度①も前に出ている状態
+                intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
+                // スライダーは前に出ている状態
+                intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
+                intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
                 break;
             case CHARGE:
+                // 回収機構は回収方向に回転
                 intakeCollectorRight.setPower(Const.intake.Power.ArmPowerCharge);
                 intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerCharge);
+                // リフトは前に出ている状態に加え、通常よりさらに地面に近く
+                intakeLiftLeft.setPosition(Const.intake.Position.liftLowest);
+                intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
+                // 縦角度①も前に出ている状態
+                intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
+                // スライダーは前に出ている状態
+                intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
+                intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
                 break;
             case DISCHARGE:
+                // 回収機構は排出方向に回転
                 intakeCollectorRight.setPower(Const.intake.Power.ArmPowerDischarge);
                 intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerDischarge);
+                // リフトは前に出ている状態
+                intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
+                intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
+                // 縦角度①も前に出ている状態
+                intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
+                // スライダーは前に出ている状態
+                intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
+                intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
                 break;
         }
 
-        //インテイクの角度(手元)
+        // 回収するサンプルの向き
         switch (state.intakeState.orientation) {
             case HORIZONTAL:
                 intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationMoving);
@@ -106,31 +147,6 @@ public class Intake implements Component {
             case VERTICAL:
                 intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
                 break;
-        }
-
-        // インテイク全体の回転
-        if (state.intakeState.intakeCharge) {
-            // Aボタンが押されたら
-            // インテイクが倒れて、スライダーが伸びる
-            intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
-            intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
-            intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
-            // 回収の機構が回っているときは下に行く、回っていないときは上に行く
-            if (state.intakeState.mode != State.IntakeMode.CHARGE) {
-                intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
-                intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
-            } else {
-                intakeLiftLeft.setPosition(Const.intake.Position.liftLowest);
-                intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
-            }
-        } else {
-            //初期状態に戻る
-            //スライダー縮んでいて、全てが格納されている
-            intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
-            intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
-            intakeSliderRight.setPosition(Const.intake.Position.sliderInit);
-            intakeLiftLeft.setPosition(Const.intake.Position.liftInit);
-            intakeLiftRight.setPosition(Const.intake.Position.liftInit);
         }
 
     }
