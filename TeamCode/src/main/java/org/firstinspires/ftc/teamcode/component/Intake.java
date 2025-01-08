@@ -79,11 +79,11 @@ public class Intake implements Component {
     public void applyState(State state) {
 
         intakeHorizontalRotation.setDirection(Servo.Direction.FORWARD);
-
-        if (state.driveState.charge){
+        //インテイクのチャージ
+        if (state.intakeState.charge){
             intakeCollectorRight.setPower(Const.intake.Power.ArmPowerCharge);
             intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerCharge);
-        }else if(state.driveState.discharge) {
+        }else if(state.intakeState.discharge) {
             intakeCollectorRight.setPower(Const.intake.Power.ArmPowerDischarge);
             intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerDischarge);
         }else{
@@ -91,17 +91,22 @@ public class Intake implements Component {
             intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
         }
 
+        //インテイクの角度(手元)
         if (state.driveState.intakeRotation){
             intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationMoving);
         }else{
             intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
         }
 
-        if (state.controllerState.intakeCharge) {
+        // インテイク全体の回転
+        if (state.intakeState.intakeCharge) {
+            // Aボタンが押されたら
+            // インテイクが倒れて、スライダーが伸びる
             intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
             intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
             intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
-            if(!state.driveState.charge){
+            // 回収の機構が回っているときは下に行く、回っていないときは上に行く
+            if(!state.intakeState.charge){
                 intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
                 intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
             }else{
@@ -109,6 +114,8 @@ public class Intake implements Component {
                 intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
             }
         }else{
+            //初期状態に戻る
+            //スライダー縮んでいて、全てが格納されている
             intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
             intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
             intakeSliderRight.setPosition(Const.intake.Position.sliderInit);

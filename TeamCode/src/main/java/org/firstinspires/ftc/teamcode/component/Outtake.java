@@ -92,7 +92,7 @@ public class Outtake implements Component {
             outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
         }
 
-        if (state.controllerState.outtakeCharge){
+        if (state.outtakeState.outtakeCharge){
             outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
             outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
             outtakeRotation.setPosition(Const.outtake.Position.rotationUp);

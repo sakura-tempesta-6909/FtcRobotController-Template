@@ -20,8 +20,6 @@ public class State {
         public double xSpeed;
         public double ySpeed;
         public double rotation;
-        public boolean charge;
-        public boolean discharge;
         public boolean intakeRotation;
         public boolean sliderIsUp;
         public boolean outtakeCollectorIsOpen;
@@ -33,23 +31,22 @@ public class State {
 
     }
 
-
-    public static class ControllerState {
-        public boolean previousGamePad1A; // To track the previous state of gamepad1.a
-        public boolean intakeCharge; // To toggle the verticalRotation position
-        public boolean currentGamePad1A;
-
-        public boolean previousGamePad2Y; // To track the previous state of gamepad1.a
-        public boolean outtakeCharge; // To toggle the verticalRotation position
-        public boolean currentGamePad2Y;
+    public static class IntakeState {
+        public boolean charge;
+        public boolean discharge;
+        public boolean intakeCharge;
     }
 
+    public static class OuttakeState {
+        public boolean outtakeCharge;
+    }
 
-    // Instances of the sub-classes
+    // Instances of the subclasses
     // サブクラスのインスタンス
     public DriveState driveState = new DriveState();
     public SlideState slideState = new SlideState();
-    public ControllerState controllerState = new ControllerState();
+    public IntakeState intakeState = new IntakeState();
+    public OuttakeState outtakeState = new OuttakeState();
 
     public void stateInit() {
         // General
@@ -65,17 +62,18 @@ public class State {
         this.driveState.outtakeCollectorIsOpen = false;
         this.driveState.outtakeCollectorIsUP = false;
         this.driveState.outtakeCollectorIsRolling = false;
-        this.driveState.charge = false;
-        this.driveState.discharge = false;
+
+        // IntakeState
+        this.intakeState.charge= false;
+        this.intakeState.discharge = false;
+        this.intakeState.intakeCharge = false;
+
+        // SliderState
         this.slideState.verticalRotationUpper = false;
 
-        this.controllerState.previousGamePad1A = false;
-        this.controllerState.intakeCharge = false;
-        this.controllerState.currentGamePad1A = false;
+        // OuttakeState
+        this.outtakeState.outtakeCharge = false;
 
-        this.controllerState.previousGamePad2Y = false;
-        this.controllerState.outtakeCharge = false;
-        this.controllerState.currentGamePad2Y = false;
     }
 
     public void stateReset() {

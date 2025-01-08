@@ -46,6 +46,8 @@ public class Main extends OpMode {
     private final ElapsedTime runtime = new ElapsedTime();
     private final ArrayList<Component> components = new ArrayList<>();
     private final State state = new State();
+    private Boolean previousGamePad1A = false;
+    private Boolean previousGamePad2Y = false;
 
     /*
      * This is executed once after the driver presses INIT.
@@ -72,6 +74,7 @@ public class Main extends OpMode {
         });
         Util.SendLog(state, telemetry);
     }
+
     /*
      * This is executed once at the start.
      * 開始時に一度だけ実行される
@@ -92,35 +95,44 @@ public class Main extends OpMode {
         components.forEach(component -> {
             component.readSensors(state);
         });
+
+        //モードの設定
         state.currentMode = State.Mode.DRIVE;
+
+        //ドライブの操作
         state.driveState.imuReset = gamepad1.start;
         state.driveState.xSpeed = Util.applyDeadZone(gamepad1.left_stick_x);
         state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
-        state.driveState.rotation= Util.applyDeadZone(gamepad1.right_stick_x);
-        state.driveState.charge = gamepad1.right_bumper;
-        state.driveState.discharge = gamepad1.left_bumper;
+        state.driveState.rotation = Util.applyDeadZone(gamepad1.right_stick_x);
 
-        state.controllerState.currentGamePad1A = gamepad1.a;
-        state.controllerState.currentGamePad2Y = gamepad2.y;
+        //インテイクの状態
+        state.intakeState.charge = gamepad1.right_bumper;
+        state.intakeState.discharge = gamepad1.left_bumper;
+
         state.driveState.intakeRotation = gamepad1.b;
 
         state.slideState.verticalRotationUpper = gamepad1.y;
 
         state.driveState.outtakeCollectorIsOpen = gamepad2.b;
 
-        if (state.controllerState.currentGamePad1A && !state.controllerState.previousGamePad1A) {
-            state.controllerState.intakeCharge = !state.controllerState.intakeCharge;
+        //intakeChargeのトグル
+        if (gamepad1.a && !previousGamePad1A) {
+            state.intakeState.intakeCharge = !state.intakeState.intakeCharge;
         }
-        state.controllerState.previousGamePad1A = state.controllerState.currentGamePad1A;
-
-        if (state.controllerState.currentGamePad2Y && !state.controllerState.previousGamePad2Y) {
-            state.controllerState.outtakeCharge = !state.controllerState.outtakeCharge;
+        //outtakeChargeのトグル
+        if (gamepad2.y && !previousGamePad2Y) {
+            state.outtakeState.outtakeCharge = !state.outtakeState.outtakeCharge;
         }
-        state.controllerState.previousGamePad2Y = state.controllerState.currentGamePad2Y;
 
         components.forEach(component -> {
             component.applyState(state);
         });
+
+        //ゲームパッドの状態の保存
+        previousGamePad1A = gamepad1.a;
+        previousGamePad2Y = gamepad2.y;
+
+        //ログの送信
         Util.SendLog(state, telemetry);
     }
 
