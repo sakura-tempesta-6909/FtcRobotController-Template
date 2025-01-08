@@ -54,9 +54,9 @@ public class Const {
         }
         public static class Position{
             public static final double collectorInit = 0;
-            public static final double collectorOpen = 0.2;
+            public static final double collectorClose = 0.24;
             public static final double liftInit = 0;
-            public static final double liftUp = 1;
+            public static final double liftUp = 1.0;
             public static final double rotationInit = 0;
             public static final double rotationUp = 0.6;
             public static final int sliderInit = 0;

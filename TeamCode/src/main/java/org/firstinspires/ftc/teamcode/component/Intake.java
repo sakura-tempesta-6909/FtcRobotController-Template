@@ -97,7 +97,7 @@ public class Intake implements Component {
             intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
         }
 
-        if (state.controllerState.robotCharge) {
+        if (state.controllerState.intakeCharge) {
             intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationSide);
             intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
             intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
@@ -108,7 +108,7 @@ public class Intake implements Component {
                 intakeLiftLeft.setPosition(Const.intake.Position.liftLowest);
                 intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
             }
-        } else {
+        }else{
             intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
             intakeSliderLeft.setPosition(Const.intake.Position.sliderInit);
             intakeSliderRight.setPosition(Const.intake.Position.sliderInit);

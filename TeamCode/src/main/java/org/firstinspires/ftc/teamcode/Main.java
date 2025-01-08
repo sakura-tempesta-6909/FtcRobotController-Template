@@ -99,25 +99,24 @@ public class Main extends OpMode {
         state.driveState.rotation= Util.applyDeadZone(gamepad1.right_stick_x);
         state.driveState.charge = gamepad1.right_bumper;
         state.driveState.discharge = gamepad1.left_bumper;
-//        state.driveState.sliderIsOut = gamepad1.a;
-//        state.driveState.verticalRotation = gamepad1.a;
-//        state.driveState.liftIsDown = gamepad1.a;
 
-        state.controllerState.currentAButtonState = gamepad1.a;
+        state.controllerState.currentGamePad1A = gamepad1.a;
+        state.controllerState.currentGamePad2Y = gamepad2.y;
         state.driveState.intakeRotation = gamepad1.b;
-
 
         state.slideState.verticalRotationUpper = gamepad1.y;
 
-//        state.driveState.sliderIsUp = gamepad2.x;
-        state.driveState.outtakeCollectorIsUP = gamepad2.y;
-        state.driveState.outtakeCollectorIsRolling = gamepad2.y;
         state.driveState.outtakeCollectorIsOpen = gamepad2.b;
 
-        if (state.controllerState.currentAButtonState && !state.controllerState.previousAButtonState) {
-            state.controllerState.robotCharge = !state.controllerState.robotCharge;
+        if (state.controllerState.currentGamePad1A && !state.controllerState.previousGamePad1A) {
+            state.controllerState.intakeCharge = !state.controllerState.intakeCharge;
         }
-        state.controllerState.previousAButtonState = state.controllerState.currentAButtonState;
+        state.controllerState.previousGamePad1A = state.controllerState.currentGamePad1A;
+
+        if (state.controllerState.currentGamePad2Y && !state.controllerState.previousGamePad2Y) {
+            state.controllerState.outtakeCharge = !state.controllerState.outtakeCharge;
+        }
+        state.controllerState.previousGamePad2Y = state.controllerState.currentGamePad2Y;
 
         components.forEach(component -> {
             component.applyState(state);

@@ -67,11 +67,6 @@ public class Outtake implements Component {
 
     @Override
     public void readSensors(State state) {
-        state.slideState.portHandRotationServoNumber = outtakeRotation.getPortNumber();
-        state.slideState.currentHandRotationServoPosition = outtakeRotation.getController().getServoPosition(outtakeRotation.getPortNumber());
-//                outtakeRotation.getPosition();
-        state.driveState.sliderLeftPosition = outtakeSliderLeft.getCurrentPosition();
-        state.driveState.sliderRightPosition = outtakeSliderRight.getCurrentPosition();
 
     }
 
@@ -83,6 +78,7 @@ public class Outtake implements Component {
              outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
              outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
          }
+         //スライダーが調整中なのでコメントアウト中
 //         }else{
 //                 SLideLeft.setTargetPosition(0);
 //                 SLideRight.setTargetPosition(0);
@@ -90,36 +86,22 @@ public class Outtake implements Component {
 //                 SLideRight.setPower(0.5);
 //         }
 
-        //        if (state.driveState.climb){
-//            climbLeft.setTargetPosition(30);
-//            climbRight.setTargetPosition(30);
-//            climbLeft.setPower(0.5);
-//            climbRight.setPower(0.5);
-//        }else{
-//            climbLeft.setTargetPosition(0);
-//            climbRight.setTargetPosition(0);
-//            climbLeft.setPower(0.5);
-//            climbRight.setPower(0.5);
-//        }
-
-        if (state.driveState.outtakeCollectorIsUP){
-            outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
-            outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
-        }else{
-            outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
-            outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
-        }
-
         if (state.driveState.outtakeCollectorIsOpen){
-            outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);
+            outtakeCollector.setPosition(Const.outtake.Position.collectorClose);
         }else{
             outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
         }
 
-        if (state.driveState.outtakeCollectorIsRolling){
+        if (state.controllerState.outtakeCharge){
+            outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
+            outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
             outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
         }else{
+            outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
+            outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
             outtakeRotation.setPosition(Const.outtake.Position.rotationInit);
         }
+
+
     }
 }
