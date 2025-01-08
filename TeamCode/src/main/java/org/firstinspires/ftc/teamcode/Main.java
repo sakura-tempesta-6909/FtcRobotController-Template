@@ -106,14 +106,15 @@ public class Main extends OpMode {
         state.driveState.rotation = Util.applyDeadZone(gamepad1.right_stick_x);
 
         //インテイクの状態
-        state.intakeState.charge = gamepad1.right_bumper;
-        state.intakeState.discharge = gamepad1.left_bumper;
+        if (gamepad1.right_bumper) {
+            state.intakeState.mode = State.IntakeMode.CHARGE;
+        } else if (gamepad1.left_bumper) {
+            state.intakeState.mode = State.IntakeMode.DISCHARGE;
+        }
 
-        state.driveState.intakeRotation = gamepad1.b;
+        state.driveState.isIntakeRotation = gamepad1.b;
 
-        state.slideState.verticalRotationUpper = gamepad1.y;
-
-        state.driveState.outtakeCollectorIsOpen = gamepad2.b;
+        state.driveState.isOuttakeCollectorOpen = gamepad2.b;
 
         //intakeChargeのトグル
         if (gamepad1.a && !previousGamePad1A) {

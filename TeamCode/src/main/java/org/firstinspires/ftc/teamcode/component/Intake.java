@@ -16,6 +16,7 @@ public class Intake implements Component {
     public final Servo intakeVerticalRotation;
     public final Servo intakeLiftLeft;
     public final Servo intakeLiftRight;
+
     public Intake(HardwareMap hardwareMap) {
 
         intakeCollectorLeft = hardwareMap.get(CRServo.class, Const.intake.Name.collectorLeft);
@@ -36,7 +37,7 @@ public class Intake implements Component {
         intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
         intakeHorizontalRotation.setDirection(Servo.Direction.REVERSE);
 
-        intakeVerticalRotation =  hardwareMap.get(Servo.class, Const.intake.Name.verticalRotation);
+        intakeVerticalRotation = hardwareMap.get(Servo.class, Const.intake.Name.verticalRotation);
         intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);
         intakeVerticalRotation.setDirection(Servo.Direction.FORWARD);
 
@@ -80,21 +81,26 @@ public class Intake implements Component {
 
         intakeHorizontalRotation.setDirection(Servo.Direction.FORWARD);
         //インテイクのチャージ
-        if (state.intakeState.charge){
-            intakeCollectorRight.setPower(Const.intake.Power.ArmPowerCharge);
-            intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerCharge);
-        }else if(state.intakeState.discharge) {
-            intakeCollectorRight.setPower(Const.intake.Power.ArmPowerDischarge);
-            intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerDischarge);
-        }else{
-            intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
-            intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
+
+        switch (state.intakeState.mode) {
+            case INIT:
+                intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
+                intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
+                break;
+            case CHARGE:
+                intakeCollectorRight.setPower(Const.intake.Power.ArmPowerCharge);
+                intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerCharge);
+                break;
+            case DISCHARGE:
+                intakeCollectorRight.setPower(Const.intake.Power.ArmPowerDischarge);
+                intakeCollectorLeft.setPower(Const.intake.Power.ArmPowerDischarge);
+                break;
         }
 
         //インテイクの角度(手元)
-        if (state.driveState.intakeRotation){
+        if (state.driveState.isIntakeRotation) {
             intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationMoving);
-        }else{
+        } else {
             intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
         }
 
@@ -106,14 +112,14 @@ public class Intake implements Component {
             intakeSliderLeft.setPosition(Const.intake.Position.sliderHead);
             intakeSliderRight.setPosition(Const.intake.Position.sliderHead);
             // 回収の機構が回っているときは下に行く、回っていないときは上に行く
-            if(!state.intakeState.charge){
+            if (state.intakeState.mode != State.IntakeMode.CHARGE) {
                 intakeLiftLeft.setPosition(Const.intake.Position.liftLimited);
                 intakeLiftRight.setPosition(Const.intake.Position.liftLimited);
-            }else{
+            } else {
                 intakeLiftLeft.setPosition(Const.intake.Position.liftLowest);
                 intakeLiftRight.setPosition(Const.intake.Position.liftLowest);
             }
-        }else{
+        } else {
             //初期状態に戻る
             //スライダー縮んでいて、全てが格納されている
             intakeVerticalRotation.setPosition(Const.intake.Position.verticalRotationInit);

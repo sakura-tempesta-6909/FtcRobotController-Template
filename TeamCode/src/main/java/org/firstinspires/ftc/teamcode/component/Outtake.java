@@ -72,7 +72,7 @@ public class Outtake implements Component {
 
     @Override
     public void applyState(State state) {
-         if (state.driveState.sliderIsUp) {
+         if (state.driveState.isSliderUp) {
              outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp);
              outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp);
              outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
@@ -86,7 +86,7 @@ public class Outtake implements Component {
 //                 SLideRight.setPower(0.5);
 //         }
 
-        if (state.driveState.outtakeCollectorIsOpen){
+        if (state.driveState.isOuttakeCollectorOpen){
             outtakeCollector.setPosition(Const.outtake.Position.collectorClose);
         }else{
             outtakeCollector.setPosition(Const.outtake.Position.collectorInit);

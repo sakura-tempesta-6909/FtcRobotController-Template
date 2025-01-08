@@ -20,21 +20,23 @@ public class State {
         public double xSpeed;
         public double ySpeed;
         public double rotation;
-        public boolean intakeRotation;
-        public boolean sliderIsUp;
-        public boolean outtakeCollectorIsOpen;
-        public boolean outtakeCollectorIsUP;
-        public boolean outtakeCollectorIsRolling;
+        public boolean isIntakeRotation;
+        public boolean isSliderUp;
+        public boolean isOuttakeCollectorOpen;
+        public boolean isOuttakeCollectorUp;
+        public boolean isOuttakeCollectorIsRolling;
     }
-    public static class SlideState {
-        public boolean verticalRotationUpper = false;
 
+    //インテイクの状態
+    public enum IntakeMode {
+        INIT,
+        CHARGE,
+        DISCHARGE,
     }
 
     public static class IntakeState {
-        public boolean charge;
-        public boolean discharge;
         public boolean intakeCharge;
+        public IntakeMode mode;
     }
 
     public static class OuttakeState {
@@ -44,7 +46,6 @@ public class State {
     // Instances of the subclasses
     // サブクラスのインスタンス
     public DriveState driveState = new DriveState();
-    public SlideState slideState = new SlideState();
     public IntakeState intakeState = new IntakeState();
     public OuttakeState outtakeState = new OuttakeState();
 
@@ -57,19 +58,15 @@ public class State {
         this.driveState.xSpeed = 0.0;
         this.driveState.ySpeed = 0.0;
         this.driveState.rotation = 0.0;
-        this.driveState.intakeRotation = false;
-        this.driveState.sliderIsUp = false;
-        this.driveState.outtakeCollectorIsOpen = false;
-        this.driveState.outtakeCollectorIsUP = false;
-        this.driveState.outtakeCollectorIsRolling = false;
+        this.driveState.isIntakeRotation = false;
+        this.driveState.isSliderUp = false;
+        this.driveState.isOuttakeCollectorOpen = false;
+        this.driveState.isOuttakeCollectorUp = false;
+        this.driveState.isOuttakeCollectorIsRolling = false;
 
         // IntakeState
-        this.intakeState.charge= false;
-        this.intakeState.discharge = false;
         this.intakeState.intakeCharge = false;
-
-        // SliderState
-        this.slideState.verticalRotationUpper = false;
+        this.intakeState.mode = IntakeMode.INIT;
 
         // OuttakeState
         this.outtakeState.outtakeCharge = false;
