@@ -48,6 +48,9 @@ public class Intake implements Component {
         intakeLiftRight = hardwareMap.get(Servo.class, Const.intake.Name.liftRight);
         intakeLiftRight.setDirection(Const.intake.Direction.liftRight);
         intakeLiftRight.setPosition(Const.intake.Position.liftInit);
+
+
+        intakeHorizontalRotation.setDirection(Servo.Direction.FORWARD);
     }
 
 
@@ -79,11 +82,9 @@ public class Intake implements Component {
     @Override
     public void applyState(State state) {
 
-        intakeHorizontalRotation.setDirection(Servo.Direction.FORWARD);
         //インテイクのチャージ
-
         switch (state.intakeState.mode) {
-            case INIT:
+            case STOP:
                 intakeCollectorRight.setPower(Const.intake.Power.collectorPowerInit);
                 intakeCollectorLeft.setPower(Const.intake.Power.collectorPowerInit);
                 break;
@@ -98,10 +99,13 @@ public class Intake implements Component {
         }
 
         //インテイクの角度(手元)
-        if (state.driveState.isIntakeRotation) {
-            intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationMoving);
-        } else {
-            intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
+        switch (state.intakeState.orientation) {
+            case HORIZONTAL:
+                intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationMoving);
+                break;
+            case VERTICAL:
+                intakeHorizontalRotation.setPosition(Const.intake.Position.horizontalRotationInit);
+                break;
         }
 
         // インテイク全体の回転

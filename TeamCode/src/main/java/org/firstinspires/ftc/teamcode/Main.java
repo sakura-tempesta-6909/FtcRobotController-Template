@@ -47,6 +47,7 @@ public class Main extends OpMode {
     private final ArrayList<Component> components = new ArrayList<>();
     private final State state = new State();
     private Boolean previousGamePad1A = false;
+    private Boolean previousGamePad1B = false;
     private Boolean previousGamePad2Y = false;
 
     /*
@@ -112,7 +113,18 @@ public class Main extends OpMode {
             state.intakeState.mode = State.IntakeMode.DISCHARGE;
         }
 
-        state.driveState.isIntakeRotation = gamepad1.b;
+        // 回収するサンプルの向きを変える
+        if (gamepad1.b && !previousGamePad1B) {
+            state.intakeState.intakeCharge = !state.intakeState.intakeCharge;
+            switch (state.intakeState.orientation) {
+                case HORIZONTAL:
+                    state.intakeState.orientation = State.IntakeOrientation.VERTICAL;
+                    break;
+                case VERTICAL:
+                    state.intakeState.orientation = State.IntakeOrientation.HORIZONTAL;
+                    break;
+            }
+        }
 
         state.driveState.isOuttakeCollectorOpen = gamepad2.b;
 
@@ -131,6 +143,7 @@ public class Main extends OpMode {
 
         //ゲームパッドの状態の保存
         previousGamePad1A = gamepad1.a;
+        previousGamePad1B = gamepad1.b;
         previousGamePad2Y = gamepad2.y;
 
         //ログの送信

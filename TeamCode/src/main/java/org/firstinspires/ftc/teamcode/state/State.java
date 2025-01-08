@@ -20,7 +20,6 @@ public class State {
         public double xSpeed;
         public double ySpeed;
         public double rotation;
-        public boolean isIntakeRotation;
         public boolean isSliderUp;
         public boolean isOuttakeCollectorOpen;
         public boolean isOuttakeCollectorUp;
@@ -29,14 +28,20 @@ public class State {
 
     //インテイクの状態
     public enum IntakeMode {
-        INIT,
-        CHARGE,
-        DISCHARGE,
+        STOP, // 何もしない
+        CHARGE, // 回収
+        DISCHARGE, // 吐き出し
+    }
+
+    public enum IntakeOrientation {
+        HORIZONTAL, // 横向き
+        VERTICAL    // 縦向き
     }
 
     public static class IntakeState {
         public boolean intakeCharge;
         public IntakeMode mode;
+        public IntakeOrientation orientation;
     }
 
     public static class OuttakeState {
@@ -58,7 +63,6 @@ public class State {
         this.driveState.xSpeed = 0.0;
         this.driveState.ySpeed = 0.0;
         this.driveState.rotation = 0.0;
-        this.driveState.isIntakeRotation = false;
         this.driveState.isSliderUp = false;
         this.driveState.isOuttakeCollectorOpen = false;
         this.driveState.isOuttakeCollectorUp = false;
@@ -66,7 +70,8 @@ public class State {
 
         // IntakeState
         this.intakeState.intakeCharge = false;
-        this.intakeState.mode = IntakeMode.INIT;
+        this.intakeState.mode = IntakeMode.STOP;
+        this.intakeState.orientation = IntakeOrientation.VERTICAL;
 
         // OuttakeState
         this.outtakeState.outtakeCharge = false;
