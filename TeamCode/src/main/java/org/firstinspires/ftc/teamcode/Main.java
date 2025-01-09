@@ -154,6 +154,7 @@ public class Main extends OpMode {
         //ゲームパッドの状態の保存
         previousGamePad1B = gamepad1.b;
         previousGamePad2Y = gamepad2.y;
+        previousGamepad1Trigger = Util.applyDeadZone(gamepad1.right_trigger) > 0.0 || Util.applyDeadZone(gamepad1.left_trigger) > 0.0;
 
         //ログの送信
         Util.SendLog(state, telemetry);

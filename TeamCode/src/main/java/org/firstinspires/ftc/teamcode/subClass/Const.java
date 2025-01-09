@@ -53,7 +53,7 @@ public class Const {
             public static final DcMotor.Direction sliderRight = DcMotor.Direction.REVERSE;
         }
         public static class Position{
-            public static final double collectorInit = 0;
+            public static final double collectorOpen = 0;
             public static final double collectorClose = 0.24;
             public static final double liftInit = 0;
             public static final double liftUp = 1.0;

@@ -18,7 +18,7 @@ public class Outtake implements Component {
     public Outtake(HardwareMap hardwareMap) {
         outtakeCollector = hardwareMap.get(Servo.class, Const.outtake.Name.Collector);
         outtakeCollector.setDirection(Servo.Direction.REVERSE);
-        outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
+        outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);
 
         outtakeLiftLeft = hardwareMap.get(Servo.class, Const.outtake.Name.liftLeft);
         outtakeLiftLeft.setDirection(Servo.Direction.REVERSE);
@@ -74,26 +74,32 @@ public class Outtake implements Component {
 
     @Override
     public void applyState(State state) {
+        // Outtakeのスライダーの状態
         switch (state.outtakeState.mode){
             case DOWN:
+                // スライダーが下がった状態
                 outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
                 break;
             case UP:
+                // スライダーが上がった状態
                 outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp);
                 outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
                 break;
         }
+
+        // OuttakeCollector(標本をつかむ部分)の状態
         if (state.driveState.isOuttakeCollectorOpen) {
             outtakeCollector.setPosition(Const.outtake.Position.collectorClose);
         } else {
-            outtakeCollector.setPosition(Const.outtake.Position.collectorInit);
+            outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);
         }
 
+        // OuttakeCharge (Collector全体の向きと開閉状態)
         if (state.outtakeState.outtakeCharge) {
             outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
             outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
