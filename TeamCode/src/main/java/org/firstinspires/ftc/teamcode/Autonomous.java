@@ -72,6 +72,7 @@ public class Autonomous extends OpMode {
                 .lineToLinearHeading(new Pose2d(-36.0, 36.0, Math.toRadians(90.0)))
                 .addTemporalMarker(() -> state.intakeState.mode = State.IntakeMode.FINDING)
                 .build();
+        drive.followTrajectorySequence(mainTrajectory);
     }
 
     /*
