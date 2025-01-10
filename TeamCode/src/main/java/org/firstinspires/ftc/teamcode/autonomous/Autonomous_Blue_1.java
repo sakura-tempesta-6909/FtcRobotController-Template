@@ -67,8 +67,35 @@ public class Autonomous_Blue_1 extends OpMode {
         Pose2d startPose = new Pose2d(-36.0, 60.0, Math.toRadians(90.0));
         drive.setPoseEstimate(startPose);
         mainTrajectory = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(-36.0, 36.0, Math.toRadians(90.0)))
-                .addTemporalMarker(() -> state.intakeState.mode = State.IntakeMode.FINDING)
+                .lineToLinearHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
+                .addTemporalMarker(() -> {
+                    // スライダーを伸ばし、フックに標本を引っかける
+                })
+                .waitSeconds(2.0)
+                .lineToLinearHeading(new Pose2d(-35.0, 35.0, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(-35.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-45.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-45.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-45.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-55.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-55.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-55.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-60.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-60.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
+                .waitSeconds(1.0)
+                .lineToLinearHeading(new Pose2d(-40.0, 65.0, Math.toRadians(-90)))
+                .addTemporalMarker(() -> {
+                    // 標本をつかむ
+                })
+                .waitSeconds(2.0)
+                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
+                .addTemporalMarker(() -> {
+                    // スライダーを伸ばし、フックに標本を引っかける
+                })
+                .waitSeconds(2.0)
+                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(90)))
                 .build();
         drive.followTrajectorySequence(mainTrajectory);
     }
