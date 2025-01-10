@@ -26,16 +26,14 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.acmerobotics.roadrunner.drive.MecanumDrive;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.component.Component;
-import org.firstinspires.ftc.teamcode.component.Drive;
 import org.firstinspires.ftc.teamcode.component.Intake;
 import org.firstinspires.ftc.teamcode.component.Outtake;
 import org.firstinspires.ftc.teamcode.lib.roadrunner.drive.SampleMecanumDrive;
@@ -45,6 +43,7 @@ import org.firstinspires.ftc.teamcode.subClass.Util;
 
 import java.util.ArrayList;
 
+@Disabled
 @TeleOp(name = "Main Autonomous", group = "Autonomous")
 public class Autonomous extends OpMode {
     private final ElapsedTime runtime = new ElapsedTime();
