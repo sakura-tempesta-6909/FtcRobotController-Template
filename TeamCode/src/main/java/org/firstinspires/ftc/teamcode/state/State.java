@@ -52,6 +52,7 @@ public class State {
     public static class OuttakeState {
         public boolean outtakeCharge;
         public SliderMode mode;
+        public int additionalSliderPosition;
     }
 
     // Instances of the subclasses
@@ -80,6 +81,7 @@ public class State {
         // OuttakeState
         this.outtakeState.outtakeCharge = false;
         this.outtakeState.mode = SliderMode.DOWN;
+        this.outtakeState.additionalSliderPosition = 0;
 
     }
 

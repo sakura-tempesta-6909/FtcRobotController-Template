@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.subClass;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+@Config
 public class Const {
     public static class Drive {
         public static class Name {
@@ -57,10 +59,12 @@ public class Const {
             public static final double collectorClose = 0.24;
             public static final double liftInit = 0;
             public static final double liftUp = 1.0;
+            public static final double liftSet = 0.7;
             public static final double rotationInit = 0;
             public static final double rotationUp = 0.6;
+            public static final double rotationSet = 0.2;
             public static final int sliderInit = 0;
-            public static final int sliderUp = 1800;
+            public static final int sliderUp = 760;
         }
         public static class Power{
             public static final double sliderInit = 0;

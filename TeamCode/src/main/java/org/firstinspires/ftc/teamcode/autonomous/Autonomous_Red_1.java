@@ -31,9 +31,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.component.Component;
 import org.firstinspires.ftc.teamcode.component.Intake;
@@ -45,8 +43,8 @@ import org.firstinspires.ftc.teamcode.subClass.Util;
 
 import java.util.ArrayList;
 
-@Autonomous(name = "Blue_1", group = "Autonomous")
-public class Autonomous_Blue_1 extends OpMode {
+@Autonomous(name = "Red_1", group = "Autonomous")
+public class Autonomous_Red_1 extends OpMode {
     private final ElapsedTime runtime = new ElapsedTime();
     private final ArrayList<Component> components = new ArrayList<>();
     private final State state = new State();
@@ -80,16 +78,16 @@ public class Autonomous_Blue_1 extends OpMode {
                 // 前に移動する
                 .lineToLinearHeading(new Pose2d(-35.0, 10.0, Math.toRadians(-90)))
                 // 横に行く
-//                        .lineToLinearHeading(new Pose2d(-48.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-50.0, 10.0, Math.toRadians(-90)))
 //                        // 後ろに移動する
-//                        .lineToLinearHeading(new Pose2d(-48.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-50.0, 60.0, Math.toRadians(-90)))
                 // 横に移動しながら、前に進む
-                .lineToConstantHeading(new Vector2d(-55.0, 60.0))
+//                        .lineToConstantHeading(new Vector2d(-55.0, 60.0))
                 // 元の位置に戻る
-                .lineToLinearHeading(new Pose2d(-55.0, 10.0, Math.toRadians(-90)))
-//                        .lineToLinearHeading(new Pose2d(-55.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-50.0, 10.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-60.0, 10.0, Math.toRadians(-90)))
                 // 横に移動しながら、後ろに進む
-                .lineToConstantHeading(new Vector2d(-65.0, 60.0))
+                .lineToConstantHeading(new Vector2d(-60.0, 60.0))
                 // 横に移動する
 //                        .lineToLinearHeading(new Pose2d(-60.0, 60.0, Math.toRadians(-90)))
                 // 前に移動する
@@ -107,13 +105,14 @@ public class Autonomous_Blue_1 extends OpMode {
 //                        .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
 //                        // 引っかける一に移動する
 //                        .lineToLinearHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
-                .lineToSplineHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
+                .lineToSplineHeading(new Pose2d(10.0, 35.0, Math.toRadians(90)))
                 .addTemporalMarker(() -> {
                     // スライダーを伸ばし、フックに標本を引っかける
                 })
                 .waitSeconds(2.0)
                 .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(90)))
-                .build();
+                .build()
+        ;
         drive.followTrajectorySequenceAsync(mainTrajectory);
     }
 

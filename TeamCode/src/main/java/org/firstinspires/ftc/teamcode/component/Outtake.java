@@ -75,20 +75,32 @@ public class Outtake implements Component {
     @Override
     public void applyState(State state) {
         // Outtakeのスライダーの状態
-        switch (state.outtakeState.mode){
+        switch (state.outtakeState.mode) {
             case DOWN:
                 // スライダーが下がった状態
                 outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                if (outtakeSliderLeft.getCurrentPosition() > (Const.outtake.Position.sliderUp / 4)) {
+                    outtakeLiftLeft.setPosition(Const.outtake.Position.liftSet);
+                    outtakeLiftRight.setPosition(Const.outtake.Position.liftSet);
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationSet);
+                } else {
+                    outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
+                    outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationInit);
+                }
                 break;
             case UP:
                 // スライダーが上がった状態
-                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp);
-                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp);
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp + state.outtakeState.additionalSliderPosition);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp  + state.outtakeState.additionalSliderPosition);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftSet);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftSet);
+                outtakeRotation.setPosition(Const.outtake.Position.rotationSet);
                 break;
         }
 
@@ -99,16 +111,16 @@ public class Outtake implements Component {
             outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);
         }
 
-        // OuttakeCharge (Collector全体の向きと開閉状態)
-        if (state.outtakeState.outtakeCharge) {
-            outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
-            outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
-            outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
-        } else {
-            outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
-            outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
-            outtakeRotation.setPosition(Const.outtake.Position.rotationInit);
-        }
+//        // OuttakeCharge (Collector全体の向きと開閉状態)
+//        if (state.outtakeState.outtakeCharge) {
+//            outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
+//            outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
+//            outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
+//        } else {
+//            outtakeLiftLeft.setPosition(Const.outtake.Position.liftInit);
+//            outtakeLiftRight.setPosition(Const.outtake.Position.liftInit);
+//            outtakeRotation.setPosition(Const.outtake.Position.rotationInit);
+//        }
 
 
     }

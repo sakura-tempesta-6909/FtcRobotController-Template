@@ -9,6 +9,7 @@ public class Util {
         telemetry.addData("SliderMode", state.outtakeState.mode.toString());
         telemetry.addData("IntakeMode", state.intakeState.mode.toString());
         telemetry.addData("IntakeOrientation", state.intakeState.orientation.toString());
+        telemetry.addData("OuttakeAdditionalSliderPosition",state.outtakeState.additionalSliderPosition);
     }
 
 

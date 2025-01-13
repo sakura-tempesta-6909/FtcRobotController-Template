@@ -138,8 +138,15 @@ public class Main extends OpMode {
         // スライダーを上げる
         if (gamepad2.dpad_down) {
             state.outtakeState.mode = State.SliderMode.DOWN;
+            state.outtakeState.additionalSliderPosition = 0;
         } else if (gamepad2.dpad_up) {
             state.outtakeState.mode = State.SliderMode.UP;
+        }
+
+        if (gamepad2.dpad_left){
+            state.outtakeState.additionalSliderPosition -= 10;
+        }else if(gamepad2.dpad_right){
+            state.outtakeState.additionalSliderPosition += 10;
         }
 
         //outtakeChargeのトグル
