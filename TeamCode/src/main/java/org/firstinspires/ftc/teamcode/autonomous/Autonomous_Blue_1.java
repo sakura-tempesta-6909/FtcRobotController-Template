@@ -29,12 +29,9 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.component.Component;
 import org.firstinspires.ftc.teamcode.component.Intake;
@@ -106,6 +103,7 @@ public class Autonomous_Blue_1 extends OpMode {
                 })
                 // 標本の前に行く
                 .lineToLinearHeading(new Pose2d(-30.0, 50.0, Math.toRadians(-90)))
+                // 一回目
                 // 標本をつかむ準備をする
                 .waitSeconds(0.3)
                 // 速度を制限する

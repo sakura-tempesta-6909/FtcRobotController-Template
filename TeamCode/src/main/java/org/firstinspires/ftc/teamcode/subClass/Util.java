@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.subClass;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.state.State;
 
@@ -17,7 +16,6 @@ public class Util {
         Telemetry dashboardTelemetry = dashboard.getTelemetry();
         dashboardTelemetry.addData("CurrentSliderPosition", state.outtakeState.currentSliderPosition);
         dashboardTelemetry.addData("OuttakeAdditionalSliderPosition", state.outtakeState.additionalSliderPosition);
-        ;
     }
 
 

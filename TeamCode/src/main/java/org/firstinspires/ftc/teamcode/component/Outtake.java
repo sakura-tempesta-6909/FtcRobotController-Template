@@ -82,6 +82,7 @@ public class Outtake implements Component {
                 outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                // スライダーの高さが上昇時の1/4になるまでは、liftを上げたままにする
                 if (outtakeSliderLeft.getCurrentPosition() > (Const.outtake.Position.sliderUp / 4)) {
                     outtakeLiftLeft.setPosition(Const.outtake.Position.liftSet);
                     outtakeLiftRight.setPosition(Const.outtake.Position.liftSet);
