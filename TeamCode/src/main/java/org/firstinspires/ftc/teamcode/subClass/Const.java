@@ -16,9 +16,11 @@ public class Const {
             public static final String rightRear = "rightRear";
             public static final String imu = "imu";
         }
-        public static class Power{
+
+        public static class Power {
 
         }
+
         public static class Direction {
             public static final DcMotor.Direction leftFront = DcMotor.Direction.FORWARD;
             public static final DcMotor.Direction rightFront = DcMotor.Direction.REVERSE;
@@ -31,10 +33,12 @@ public class Const {
                         RevHubOrientationOnRobot.LogoFacingDirection.UP,
                         RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
                 );
+
         public static class AutonomousDrive {
 
         }
     }
+
     public static class outtake {
         public static class Name {
             public static final String liftLeft = "outtakeLiftLeft";
@@ -45,32 +49,40 @@ public class Const {
             public static final String Rotation = "outtakeCollectorRotation";
         }
 
-        public static class Mode{
-            public static final  DcMotor.RunMode sliderInit = DcMotor.RunMode.STOP_AND_RESET_ENCODER;
-            public static final  DcMotor.RunMode sliderMoving = DcMotor.RunMode.RUN_TO_POSITION;
+        public static class Mode {
+            public static final DcMotor.RunMode sliderInit = DcMotor.RunMode.STOP_AND_RESET_ENCODER;
+            public static final DcMotor.RunMode sliderMoving = DcMotor.RunMode.RUN_TO_POSITION;
 
         }
-        public static class Direction{
+
+        public static class Direction {
             public static final DcMotor.Direction sliderLeft = DcMotor.Direction.FORWARD;
             public static final DcMotor.Direction sliderRight = DcMotor.Direction.REVERSE;
         }
-        public static class Position{
+
+        public static class Position {
             public static final double collectorOpen = 0;
             public static final double collectorClose = 0.24;
             public static final double liftInit = 0;
             public static final double liftUp = 1.0;
             public static final double liftSet = 0.7;
+            public static final double liftAutoSet = 0.7;
             public static final double rotationInit = 0;
-            public static final double rotationUp = 0.6;
-            public static final double rotationSet = 0.2;
+            public static final double rotationUp = 0.5;
+            public static final double rotationSet = 0.18;
+            public static final double rotationAutoPrepare = 0.1;
+            public static final double rotationAutoSet = 0.20;
             public static final int sliderInit = 0;
             public static final int sliderUp = 760;
+            public static final int sliderAutoUp = 850;
         }
-        public static class Power{
+
+        public static class Power {
             public static final double sliderInit = 0;
             public static final double sliderMoving = 0.5;
         }
     }
+
     public static class intake {
         public static class Name {
             public static final String sliderRight = "intakeSliderRight";
@@ -83,7 +95,8 @@ public class Const {
             public static final String verticalRotation = "intakeVerticalRotation";
 
         }
-        public static class Direction{
+
+        public static class Direction {
             public static final Servo.Direction sliderLeft = Servo.Direction.REVERSE;
             public static final Servo.Direction sliderRight = Servo.Direction.FORWARD;
             public static final DcMotorSimple.Direction collectorLeftInit = DcMotorSimple.Direction.FORWARD;
@@ -98,12 +111,14 @@ public class Const {
             public static final DcMotor.Direction climbRight = DcMotor.Direction.REVERSE;
 
         }
-        public static class Mode{
-            public static final  DcMotor.RunMode climbInit = DcMotor.RunMode.STOP_AND_RESET_ENCODER;
-            public static final  DcMotor.RunMode climbMoving = DcMotor.RunMode.RUN_TO_POSITION;
+
+        public static class Mode {
+            public static final DcMotor.RunMode climbInit = DcMotor.RunMode.STOP_AND_RESET_ENCODER;
+            public static final DcMotor.RunMode climbMoving = DcMotor.RunMode.RUN_TO_POSITION;
 
         }
-        public static class Power{
+
+        public static class Power {
             public static final double collectorPowerInit = 0;
             public static final double ArmPowerCharge = 0.5;
             public static final double ArmPowerDischarge = -0.5;
@@ -112,7 +127,8 @@ public class Const {
 
 
         }
-        public static class Position{
+
+        public static class Position {
             public static final double sliderInit = 0;
             public static final double sliderHead = 0.25;
             public static final double liftInit = 0;
@@ -125,19 +141,22 @@ public class Const {
             public static final double liftLowest = 0.74;
         }
     }
-    public static class Camera{
+
+    public static class Camera {
         public static class Name {
 
         }
-        public static class Position{
+
+        public static class Position {
 
         }
-        public static class Size{
+
+        public static class Size {
 
         }
     }
 
-    public static class Other{
+    public static class Other {
         public static final Double CONTROLLER_DEAD_ZONE = 0.1;
     }
 }

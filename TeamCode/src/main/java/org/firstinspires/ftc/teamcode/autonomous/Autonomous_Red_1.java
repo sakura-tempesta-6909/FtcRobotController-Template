@@ -30,6 +30,8 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
+import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -59,7 +61,7 @@ public class Autonomous_Red_1 extends OpMode {
     @Override
     public void init() {
         state.stateInit();
-        components.add(new Intake(hardwareMap));
+        //components.add(new Intake(hardwareMap));
         components.add(new Outtake(hardwareMap));
 
         drive = new SampleMecanumDrive(hardwareMap);
@@ -67,15 +69,37 @@ public class Autonomous_Red_1 extends OpMode {
         Pose2d startPose = new Pose2d(0, 60.0, Math.toRadians(90.0));
         drive.setPoseEstimate(startPose);
         mainTrajectory = drive.trajectorySequenceBuilder(startPose)
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isOuttakeCollectorOpen = true;
+                    state.outtakeState.mode = State.SliderMode.AUTO_PREPARE_MODE;
+                })
                 // 前に進む
-                .lineToLinearHeading(new Pose2d(0.0, 40.0, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(0.0, 30.0, Math.toRadians(90)))
                 .addTemporalMarker(() -> {
                     // スライダーを伸ばし、フックに標本を引っかける
+                    state.outtakeState.mode = State.SliderMode.AUTO_MODE;
                 })
-                .waitSeconds(2.0)
-                // 横に移動する
-                .lineToLinearHeading(new Pose2d(-35.0, 40.0, Math.toRadians(90)))
-                // 前に移動する
+                .waitSeconds(0.5)
+                // ちょっと下がる
+                .setAccelConstraint(new ProfileAccelerationConstraint(20))
+                .lineToLinearHeading(new Pose2d(0.0, 40.0, Math.toRadians(90)))
+                .addTemporalMarker(() -> {
+                    state.outtakeState.additionalSliderPosition = 300;
+                })
+//                .waitSeconds(1.0)
+                .waitSeconds(0.5)
+                .lineToLinearHeading(new Pose2d(0.0, 48.0, Math.toRadians(90)))
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isOuttakeCollectorOpen = false;
+                })
+                .waitSeconds(0.2)
+                .resetAccelConstraint()
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.DOWN;
+                })
+//                // 横に移動する
+                .lineToLinearHeading(new Pose2d(-35.0, 48.0, Math.toRadians(90)))
+//                // 前に移動する
                 .lineToLinearHeading(new Pose2d(-35.0, 10.0, Math.toRadians(-90)))
                 // 横に行く
                 .lineToLinearHeading(new Pose2d(-50.0, 10.0, Math.toRadians(-90)))
@@ -86,34 +110,42 @@ public class Autonomous_Red_1 extends OpMode {
                 // 元の位置に戻る
                 .lineToLinearHeading(new Pose2d(-50.0, 10.0, Math.toRadians(-90)))
                 .lineToLinearHeading(new Pose2d(-60.0, 10.0, Math.toRadians(-90)))
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.INTAKE_MODE;
+                })
                 // 横に移動しながら、後ろに進む
                 .lineToConstantHeading(new Vector2d(-60.0, 60.0))
                 // 横に移動する
 //                        .lineToLinearHeading(new Pose2d(-60.0, 60.0, Math.toRadians(-90)))
                 // 前に移動する
-                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-40.0, 50.0, Math.toRadians(-90)))
                 // 標本をつかむ準備をする
-                .waitSeconds(1.0)
+                .waitSeconds(0.3)
                 // 標本に近づく
-                .lineToLinearHeading(new Pose2d(-40.0, 65.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-40.0, 57.0, Math.toRadians(-90)))
                 // 標本をつかむ
                 .addTemporalMarker(() -> {
-                    // 標本をつかむ
+                    state.outtakeState.isOuttakeCollectorOpen = true;
                 })
-                .waitSeconds(2.0)
-//                        // 後ろに下がる
-//                        .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
-//                        // 引っかける一に移動する
-//                        .lineToLinearHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
-                .lineToSplineHeading(new Pose2d(10.0, 35.0, Math.toRadians(90)))
+                .waitSeconds(0.5)
                 .addTemporalMarker(() -> {
-                    // スライダーを伸ばし、フックに標本を引っかける
+                    state.outtakeState.isIntakeUp = true;
                 })
-                .waitSeconds(2.0)
-                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(90)))
+                .waitSeconds(0.5)
+////                        // 後ろに下がる
+////                        .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
+////                        // 引っかける一に移動する
+////                        .lineToLinearHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
+//                .lineToSplineHeading(new Pose2d(10.0, 35.0, Math.toRadians(90)))
+//                .addTemporalMarker(() -> {
+//                    // スライダーを伸ばし、フックに標本を引っかける
+//                })
+//                .waitSeconds(2.0)
+//                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(90)))
                 .build()
         ;
         drive.followTrajectorySequenceAsync(mainTrajectory);
+        state.outtakeState.isOuttakeCollectorOpen = true;
     }
 
     /*
@@ -125,6 +157,9 @@ public class Autonomous_Red_1 extends OpMode {
         state.stateReset();
         components.forEach(component -> {
             component.readSensors(state);
+        });
+        components.forEach(component -> {
+            component.applyState(state);
         });
         Util.SendLog(state, telemetry);
     }

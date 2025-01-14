@@ -69,7 +69,7 @@ public class Outtake implements Component {
 
     @Override
     public void readSensors(State state) {
-
+        state.outtakeState.currentSliderPosition = outtakeSliderLeft.getCurrentPosition();
     }
 
     @Override
@@ -92,20 +92,58 @@ public class Outtake implements Component {
                     outtakeRotation.setPosition(Const.outtake.Position.rotationInit);
                 }
                 break;
-            case UP:
+            case TELEOP_MODE:
                 // スライダーが上がった状態
                 outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderUp + state.outtakeState.additionalSliderPosition);
-                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp  + state.outtakeState.additionalSliderPosition);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderUp + state.outtakeState.additionalSliderPosition);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
                 outtakeLiftLeft.setPosition(Const.outtake.Position.liftSet);
                 outtakeLiftRight.setPosition(Const.outtake.Position.liftSet);
                 outtakeRotation.setPosition(Const.outtake.Position.rotationSet);
                 break;
+            case AUTO_MODE:
+                // スライダーが上がった状態
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderAutoUp + state.outtakeState.additionalSliderPosition);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderAutoUp + state.outtakeState.additionalSliderPosition);
+                outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
+                outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSet);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSet);
+                if(state.outtakeState.isOuttakeAutoPrepare){
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationAutoPrepare);
+                }else{
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSet);
+                }
+                break;
+            case AUTO_PREPARE_MODE:
+                // スライダーが下がった状態
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderInit);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
+                outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
+                outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSet);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSet);
+                outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSet);
+                break;
+            case INTAKE_MODE:
+                // スライダーが下がった状態
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderInit);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
+                outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
+                outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
+                if(state.outtakeState.isIntakeUp){
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationUp - 0.2);
+                }else{
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
+                }
+                break;
         }
 
         // OuttakeCollector(標本をつかむ部分)の状態
-        if (state.driveState.isOuttakeCollectorOpen) {
+        if (state.outtakeState.isOuttakeCollectorOpen) {
             outtakeCollector.setPosition(Const.outtake.Position.collectorClose);
         } else {
             outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);

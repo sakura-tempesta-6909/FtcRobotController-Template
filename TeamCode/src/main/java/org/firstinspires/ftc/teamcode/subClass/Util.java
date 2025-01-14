@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subClass;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.state.State;
 
@@ -9,7 +11,13 @@ public class Util {
         telemetry.addData("SliderMode", state.outtakeState.mode.toString());
         telemetry.addData("IntakeMode", state.intakeState.mode.toString());
         telemetry.addData("IntakeOrientation", state.intakeState.orientation.toString());
-        telemetry.addData("OuttakeAdditionalSliderPosition",state.outtakeState.additionalSliderPosition);
+        telemetry.addData("OuttakeAdditionalSliderPosition", state.outtakeState.additionalSliderPosition);
+        telemetry.addData("CurrentSliderPosition", state.outtakeState.currentSliderPosition);
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        Telemetry dashboardTelemetry = dashboard.getTelemetry();
+        dashboardTelemetry.addData("CurrentSliderPosition", state.outtakeState.currentSliderPosition);
+        dashboardTelemetry.addData("OuttakeAdditionalSliderPosition", state.outtakeState.additionalSliderPosition);
+        ;
     }
 
 

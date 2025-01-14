@@ -20,9 +20,6 @@ public class State {
         public double xSpeed;
         public double ySpeed;
         public double rotation;
-        public boolean isOuttakeCollectorOpen;
-        public boolean isOuttakeCollectorUp;
-        public boolean isOuttakeCollectorIsRolling;
     }
 
     //インテイクの状態
@@ -46,13 +43,21 @@ public class State {
 
     public enum SliderMode {
         DOWN,
-        UP
+        TELEOP_MODE,
+        AUTO_MODE,
+        AUTO_PREPARE_MODE,
+        INTAKE_MODE,
+
     }
 
     public static class OuttakeState {
         public boolean outtakeCharge;
         public SliderMode mode;
         public int additionalSliderPosition;
+        public boolean isOuttakeCollectorOpen;
+        public boolean isOuttakeAutoPrepare;
+        public double currentSliderPosition;
+        public boolean isIntakeUp;
     }
 
     // Instances of the subclasses
@@ -70,9 +75,7 @@ public class State {
         this.driveState.xSpeed = 0.0;
         this.driveState.ySpeed = 0.0;
         this.driveState.rotation = 0.0;
-        this.driveState.isOuttakeCollectorOpen = false;
-        this.driveState.isOuttakeCollectorUp = false;
-        this.driveState.isOuttakeCollectorIsRolling = false;
+        this.outtakeState.isOuttakeCollectorOpen = false;
 
         // IntakeState
         this.intakeState.mode = IntakeMode.STOP;
@@ -82,6 +85,9 @@ public class State {
         this.outtakeState.outtakeCharge = false;
         this.outtakeState.mode = SliderMode.DOWN;
         this.outtakeState.additionalSliderPosition = 0;
+        this.outtakeState.isOuttakeAutoPrepare = false;
+        this.outtakeState.currentSliderPosition = 0;
+        this.outtakeState.isIntakeUp = false;
 
     }
 
