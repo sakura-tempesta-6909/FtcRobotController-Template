@@ -66,20 +66,23 @@ public class Const {
             public static final double liftInit = 0;
             public static final double liftUp = 1.0;
             public static final double liftSet = 0.7;
-            public static final double liftAutoSet = 0.7;
+            public static final double liftAutoSetBelow = 0.7;
+            public static final double liftAutoSetAbove= 0.7;
             public static final double rotationInit = 0;
             public static final double rotationUp = 0.5;
             public static final double rotationSet = 0.18;
             public static final double rotationAutoPrepare = 0.1;
-            public static final double rotationAutoSet = 0.20;
+            public static final double rotationAutoSetBelow = 0.20;
+            public static final double rotationAutoSetAbove = 0.20;
             public static final int sliderInit = 0;
             public static final int sliderUp = 760;
-            public static final int sliderAutoUp = 850;
+            public static final int sliderAutoUpBelow = 850;
+            public static final int sliderAutoUpAbove = 1450;
         }
 
         public static class Power {
             public static final double sliderInit = 0;
-            public static final double sliderMoving = 0.5;
+            public static final double sliderMoving = 0.8;
         }
     }
 

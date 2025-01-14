@@ -102,18 +102,32 @@ public class Outtake implements Component {
                 outtakeLiftRight.setPosition(Const.outtake.Position.liftSet);
                 outtakeRotation.setPosition(Const.outtake.Position.rotationSet);
                 break;
-            case AUTO_MODE:
+            case AUTO_MODE_BELOW:
                 // スライダーが上がった状態
-                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderAutoUp + state.outtakeState.additionalSliderPosition);
-                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderAutoUp + state.outtakeState.additionalSliderPosition);
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderAutoUpBelow + state.outtakeState.additionalSliderPosition);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderAutoUpBelow + state.outtakeState.additionalSliderPosition);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
-                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSet);
-                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSet);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSetBelow);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSetBelow);
                 if(state.outtakeState.isOuttakeAutoPrepare){
                     outtakeRotation.setPosition(Const.outtake.Position.rotationAutoPrepare);
                 }else{
-                    outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSet);
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSetBelow);
+                }
+                break;
+            case AUTO_MODE_ABOVE:
+                // スライダーが上がった状態
+                outtakeSliderLeft.setTargetPosition(Const.outtake.Position.sliderAutoUpAbove + state.outtakeState.additionalSliderPosition);
+                outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderAutoUpAbove + state.outtakeState.additionalSliderPosition);
+                outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
+                outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSetAbove);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSetAbove);
+                if(state.outtakeState.isOuttakeAutoPrepare){
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationAutoPrepare);
+                }else{
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSetAbove);
                 }
                 break;
             case AUTO_PREPARE_MODE:
@@ -122,9 +136,9 @@ public class Outtake implements Component {
                 outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
-                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSet);
-                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSet);
-                outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSet);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftAutoSetBelow);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftAutoSetBelow);
+                outtakeRotation.setPosition(Const.outtake.Position.rotationAutoSetBelow);
                 break;
             case INTAKE_MODE:
                 // スライダーが下がった状態
@@ -135,7 +149,7 @@ public class Outtake implements Component {
                 outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
                 outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
                 if(state.outtakeState.isIntakeUp){
-                    outtakeRotation.setPosition(Const.outtake.Position.rotationUp - 0.2);
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationUp - 0.3);
                 }else{
                     outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
                 }

@@ -44,7 +44,8 @@ public class State {
     public enum SliderMode {
         DOWN,
         TELEOP_MODE,
-        AUTO_MODE,
+        AUTO_MODE_BELOW,
+        AUTO_MODE_ABOVE,
         AUTO_PREPARE_MODE,
         INTAKE_MODE,
 
