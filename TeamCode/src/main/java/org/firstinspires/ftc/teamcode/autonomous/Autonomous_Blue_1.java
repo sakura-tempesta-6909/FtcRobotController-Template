@@ -30,6 +30,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -57,7 +58,6 @@ public class Autonomous_Blue_1 extends OpMode {
      * This is executed once after the driver presses INIT.
      * ドライバーがINITを押した後、1度実行される
      */
-
     @Override
     public void init() {
         state.stateInit();
@@ -69,52 +69,140 @@ public class Autonomous_Blue_1 extends OpMode {
         Pose2d startPose = new Pose2d(0, 60.0, Math.toRadians(90.0));
         drive.setPoseEstimate(startPose);
         mainTrajectory = drive.trajectorySequenceBuilder(startPose)
-                // 前に進む
-                .lineToLinearHeading(new Pose2d(0.0, 40.0, Math.toRadians(90)))
                 .addTemporalMarker(() -> {
-                    // スライダーを伸ばし、フックに標本を引っかける
+                    state.outtakeState.isOuttakeCollectorClose = true;
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK_PREPARE;
                 })
-                .waitSeconds(2.0)
+                // 前に進む
+                .lineToLinearHeading(new Pose2d(0.0, 31.0, Math.toRadians(90)))
+                // スライダーを伸ばして、下から設置する
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK;
+                })
+                // 1秒待つ (スライダーが伸びきるまで)
+                .waitSeconds(1.0)
+                // 標本を離す
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isOuttakeCollectorClose = false;
+                })
+                // 0.5秒待つ
+                .waitSeconds(0.5)
+                // スライダーを元に戻す
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK_PREPARE;
+                })
+                // 元に戻すまで待つ
+                .waitSeconds(0.5)
                 // 横に移動する
-                .lineToLinearHeading(new Pose2d(-35.0, 40.0, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(-35.0, 48.0, Math.toRadians(90)))
                 // 前に移動する
                 .lineToLinearHeading(new Pose2d(-35.0, 10.0, Math.toRadians(-90)))
                 // 横に行く
-//                        .lineToLinearHeading(new Pose2d(-48.0, 10.0, Math.toRadians(-90)))
-//                        // 後ろに移動する
-//                        .lineToLinearHeading(new Pose2d(-48.0, 60.0, Math.toRadians(-90)))
-                // 横に移動しながら、前に進む
-                .lineToConstantHeading(new Vector2d(-55.0, 60.0))
-                // 元の位置に戻る
-                .lineToLinearHeading(new Pose2d(-55.0, 10.0, Math.toRadians(-90)))
-//                        .lineToLinearHeading(new Pose2d(-55.0, 10.0, Math.toRadians(-90)))
-                // 横に移動しながら、後ろに進む
-                .lineToConstantHeading(new Vector2d(-65.0, 60.0))
-                // 横に移動する
-//                        .lineToLinearHeading(new Pose2d(-60.0, 60.0, Math.toRadians(-90)))
-                // 前に移動する
-                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-50.0, 10.0, Math.toRadians(-90)))
+                // 後ろに移動する (サンプルをヒューマンエリアに)
+                .lineToLinearHeading(new Pose2d(-50.0, 60.0, Math.toRadians(-90)))
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.INTAKE;
+                })
+                // 標本の前に行く
+                .lineToLinearHeading(new Pose2d(-30.0, 50.0, Math.toRadians(-90)))
                 // 標本をつかむ準備をする
-                .waitSeconds(1.0)
+                .waitSeconds(0.3)
+                // 速度を制限する
+                .setAccelConstraint(new ProfileAccelerationConstraint(20.0))
                 // 標本に近づく
-                .lineToLinearHeading(new Pose2d(-40.0, 65.0, Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(-30.0, 57.0, Math.toRadians(-90)))
                 // 標本をつかむ
                 .addTemporalMarker(() -> {
-                    // 標本をつかむ
+                    state.outtakeState.isOuttakeCollectorClose = true;
                 })
-                .waitSeconds(2.0)
-//                        // 後ろに下がる
-//                        .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(-90)))
-//                        // 引っかける一に移動する
-//                        .lineToLinearHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
-                .lineToSplineHeading(new Pose2d(0.0, 35.0, Math.toRadians(90)))
+                // つかみおわるまで待つ
+                .waitSeconds(1.0)
+                // アウトテイクを少し上に上げる
                 .addTemporalMarker(() -> {
+                    state.outtakeState.isIntakeUp = true;
+                })
+                // 上がるまで待つ
+                .waitSeconds(0.5)
+                // 後ろに下がる
+                .lineToLinearHeading(new Pose2d(-30.0, 55.0, Math.toRadians(-90)))
+                // 速度制限解除
+                .resetAccelConstraint()
+                // 引っかける位置に移動する
+                .lineToLinearHeading(new Pose2d(5.0, 30.0, Math.toRadians(90)))
+                // 少し上げるのを解除
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isIntakeUp = false;
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK_PREPARE;
+                })
+                // スライダーを伸ばし、フックに下から標本を引っかける
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK;
+                })
+                // スライダーが伸びきるまで待つ
+                .waitSeconds(1.0)
+                // 標本を離す
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isOuttakeCollectorClose = false;
+                })
+                // 離し終わるのを待つ
+                .waitSeconds(0.5)
+                // スライダーを縮める
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK_PREPARE;
                     // スライダーを伸ばし、フックに標本を引っかける
                 })
-                .waitSeconds(2.0)
-                .lineToLinearHeading(new Pose2d(-40.0, 60.0, Math.toRadians(90)))
-                .build();
+                // 2回目
+                .lineToLinearHeading(new Pose2d(-30.0, 50.0, Math.toRadians(-90)))
+                // 標本をつかむ準備をする
+                .waitSeconds(0.3)
+                // 速度を制限する
+                .setAccelConstraint(new ProfileAccelerationConstraint(20.0))
+                // 標本に近づく
+                .lineToLinearHeading(new Pose2d(-30.0, 57.0, Math.toRadians(-90)))
+                // 標本をつかむ
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isOuttakeCollectorClose = true;
+                })
+                // つかみおわるまで待つ
+                .waitSeconds(1.0)
+                // アウトテイクを少し上に上げる
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isIntakeUp = true;
+                })
+                // 上がるまで待つ
+                .waitSeconds(0.5)
+                // 後ろに下がる
+                .lineToLinearHeading(new Pose2d(-30.0, 55.0, Math.toRadians(-90)))
+                // 速度制限解除
+                .resetAccelConstraint()
+                // 引っかける位置に移動する
+                .lineToLinearHeading(new Pose2d(8.0, 30.0, Math.toRadians(90)))
+                // 少し上げるのを解除
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isIntakeUp = false;
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK_PREPARE;
+                })
+                // スライダーを伸ばし、フックに下から標本を引っかける
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK;
+                })
+                // スライダーが伸びきるまで待つ
+                .waitSeconds(1.0)
+                // 標本を離す
+                .addTemporalMarker(() -> {
+                    state.outtakeState.isOuttakeCollectorClose = false;
+                })
+                // 離し終わるのを待つ
+                .waitSeconds(0.5)
+                // スライダーを縮める
+                .addTemporalMarker(() -> {
+                    state.outtakeState.mode = State.SliderMode.AUTO_HOOK_PREPARE;
+                })
+                .build()
+        ;
         drive.followTrajectorySequenceAsync(mainTrajectory);
+        state.outtakeState.isOuttakeCollectorClose = true;
     }
 
     /*

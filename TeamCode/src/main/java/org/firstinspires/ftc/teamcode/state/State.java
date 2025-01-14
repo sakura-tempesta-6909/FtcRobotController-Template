@@ -43,12 +43,10 @@ public class State {
 
     public enum SliderMode {
         DOWN,
-        TELEOP_MODE,
-        AUTO_MODE_BELOW,
-        AUTO_MODE_ABOVE,
-        AUTO_PREPARE_MODE,
-        INTAKE_MODE,
-
+        TELEOP,
+        AUTO_HOOK,
+        AUTO_HOOK_PREPARE,
+        INTAKE,
     }
 
     public static class OuttakeState {
@@ -56,7 +54,6 @@ public class State {
         public SliderMode mode;
         public int additionalSliderPosition;
         public boolean isOuttakeCollectorClose;
-        public boolean isOuttakeAutoPrepare;
         public double currentSliderPosition;
         public boolean isIntakeUp;
     }
@@ -86,7 +83,6 @@ public class State {
         this.outtakeState.outtakeCharge = false;
         this.outtakeState.mode = SliderMode.DOWN;
         this.outtakeState.additionalSliderPosition = 0;
-        this.outtakeState.isOuttakeAutoPrepare = false;
         this.outtakeState.currentSliderPosition = 0;
         this.outtakeState.isIntakeUp = false;
 
@@ -98,5 +94,8 @@ public class State {
         this.driveState.xSpeed = 0.0;
         this.driveState.ySpeed = 0.0;
         this.driveState.rotation = 0.0;
+
+        // OuttakeState
+        this.outtakeState.currentSliderPosition = 0;
     }
 }

@@ -140,7 +140,7 @@ public class Main extends OpMode {
             state.outtakeState.mode = State.SliderMode.DOWN;
             state.outtakeState.additionalSliderPosition = 0;
         } else if (gamepad2.dpad_up) {
-            state.outtakeState.mode = State.SliderMode.TELEOP_MODE;
+            state.outtakeState.mode = State.SliderMode.TELEOP;
         }
 
         if (gamepad2.dpad_left){
