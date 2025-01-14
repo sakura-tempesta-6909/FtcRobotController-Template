@@ -69,7 +69,7 @@ public class Const {
             public static final double liftAutoSetBelow = 0.7;
             public static final double liftAutoSetAbove= 0.7;
             public static final double rotationInit = 0;
-            public static final double rotationUp = 0.5;
+            public static final double rotationUp = 0.6;
             public static final double rotationSet = 0.18;
             public static final double rotationAutoPrepare = 0.1;
             public static final double rotationAutoSetBelow = 0.20;
@@ -136,7 +136,7 @@ public class Const {
             public static final double sliderHead = 0.25;
             public static final double liftInit = 0;
             public static final double verticalRotationUpper = 0.1;
-            public static final double verticalRotationInit = 0.66;
+            public static final double verticalRotationInit = 0.46;
             public static final double verticalRotationSide = 1;
             public static final double horizontalRotationInit = 0;
             public static final double horizontalRotationMoving = 0.3;

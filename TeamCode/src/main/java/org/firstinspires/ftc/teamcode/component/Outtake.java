@@ -146,10 +146,10 @@ public class Outtake implements Component {
                 outtakeSliderRight.setTargetPosition(Const.outtake.Position.sliderInit);
                 outtakeSliderLeft.setPower(Const.outtake.Power.sliderMoving);
                 outtakeSliderRight.setPower(Const.outtake.Power.sliderMoving);
-                outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp);
-                outtakeLiftRight.setPosition(Const.outtake.Position.liftUp);
+                outtakeLiftLeft.setPosition(Const.outtake.Position.liftUp - 0.1);
+                outtakeLiftRight.setPosition(Const.outtake.Position.liftUp - 0.1);
                 if(state.outtakeState.isIntakeUp){
-                    outtakeRotation.setPosition(Const.outtake.Position.rotationUp - 0.3);
+                    outtakeRotation.setPosition(Const.outtake.Position.rotationUp - 0.4);
                 }else{
                     outtakeRotation.setPosition(Const.outtake.Position.rotationUp);
                 }
@@ -157,7 +157,7 @@ public class Outtake implements Component {
         }
 
         // OuttakeCollector(標本をつかむ部分)の状態
-        if (state.outtakeState.isOuttakeCollectorOpen) {
+        if (state.outtakeState.isOuttakeCollectorClose) {
             outtakeCollector.setPosition(Const.outtake.Position.collectorClose);
         } else {
             outtakeCollector.setPosition(Const.outtake.Position.collectorOpen);

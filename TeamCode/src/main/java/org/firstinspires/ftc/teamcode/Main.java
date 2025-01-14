@@ -133,7 +133,7 @@ public class Main extends OpMode {
             }
         }
 
-        state.outtakeState.isOuttakeCollectorOpen = gamepad2.b;
+        state.outtakeState.isOuttakeCollectorClose = gamepad2.b;
 
         // スライダーを上げる
         if (gamepad2.dpad_down) {

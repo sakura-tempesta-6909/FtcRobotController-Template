@@ -55,7 +55,7 @@ public class State {
         public boolean outtakeCharge;
         public SliderMode mode;
         public int additionalSliderPosition;
-        public boolean isOuttakeCollectorOpen;
+        public boolean isOuttakeCollectorClose;
         public boolean isOuttakeAutoPrepare;
         public double currentSliderPosition;
         public boolean isIntakeUp;
@@ -76,7 +76,7 @@ public class State {
         this.driveState.xSpeed = 0.0;
         this.driveState.ySpeed = 0.0;
         this.driveState.rotation = 0.0;
-        this.outtakeState.isOuttakeCollectorOpen = false;
+        this.outtakeState.isOuttakeCollectorClose = false;
 
         // IntakeState
         this.intakeState.mode = IntakeMode.STOP;
