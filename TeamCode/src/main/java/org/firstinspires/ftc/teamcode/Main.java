@@ -66,6 +66,9 @@ public class Main extends OpMode {
         components.forEach(component -> {
             component.readSensors(state);
         });
+        components.forEach(component -> {
+            component.applyState(state);
+        });
         Util.SendLog(state, telemetry);
     }
 
@@ -76,7 +79,6 @@ public class Main extends OpMode {
     @Override
     public void start() {
         runtime.reset();
-        state.stateInit();
     }
 
     /*
@@ -89,11 +91,12 @@ public class Main extends OpMode {
         components.forEach(component -> {
             component.readSensors(state);
         });
+
         state.currentMode = State.Mode.DRIVE;
         state.driveState.imuReset = gamepad1.start;
         state.driveState.xSpeed = Util.applyDeadZone(gamepad1.left_stick_x);
         state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
-        state.driveState.rotation= Util.applyDeadZone(gamepad1.right_stick_x);
+        state.driveState.rotation = Util.applyDeadZone(gamepad1.right_stick_x);
 
         components.forEach(component -> {
             component.applyState(state);

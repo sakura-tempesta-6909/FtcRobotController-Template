@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.component;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -42,26 +41,6 @@ public class Drive implements Component {
         imu.resetYaw();
         IMU.Parameters parameters = new IMU.Parameters(Const.Drive.HUB_ORIENTATION);
         imu.initialize(parameters);
-    }
-
-    @Override
-    public void autonomousInit() {
-
-    }
-
-    @Override
-    public void teleopInit() {
-
-    }
-
-    @Override
-    public void disabledInit() {
-
-    }
-
-    @Override
-    public void testInit() {
-
     }
 
     @Override
