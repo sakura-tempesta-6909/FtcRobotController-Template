@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.component.Component;
+import org.firstinspires.ftc.teamcode.component.Drive;
 import org.firstinspires.ftc.teamcode.state.State;
 import org.firstinspires.ftc.teamcode.subClass.Util;
 
@@ -52,6 +53,7 @@ public class Main extends OpMode {
     @Override
     public void init() {
         state.stateInit();
+        components.add(new Drive(hardwareMap));
     }
 
     /*
@@ -87,6 +89,11 @@ public class Main extends OpMode {
         components.forEach(component -> {
             component.readSensors(state);
         });
+        state.currentMode = State.Mode.DRIVE;
+        state.driveState.imuReset = gamepad1.start;
+        state.driveState.xSpeed = Util.applyDeadZone(gamepad1.left_stick_x);
+        state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
+        state.driveState.rotation= Util.applyDeadZone(gamepad1.right_stick_x);
 
         components.forEach(component -> {
             component.applyState(state);
