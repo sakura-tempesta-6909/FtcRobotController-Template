@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.lib.roadrunner.messages.DriveCommandMessag
 import org.firstinspires.ftc.teamcode.lib.roadrunner.messages.PoseMessage;
 import org.firstinspires.ftc.teamcode.lib.roadrunner.messages.TankCommandMessage;
 import org.firstinspires.ftc.teamcode.lib.roadrunner.messages.TankLocalizerInputsMessage;
+import org.firstinspires.ftc.teamcode.subClass.Const;
 
 import java.lang.Math;
 import java.util.*;
@@ -25,12 +26,10 @@ import java.util.*;
 public final class TankDrive {
     public static class Params {
         // IMU orientation
-        // TODO: fill in these values based on
-        //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+                Const.Drive.LOGO_FACING_DIRECTION;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+                Const.Drive.USB_FACING_DIRECTION;
 
         // drive model parameters
         public double inPerTick = 0;
@@ -210,10 +209,16 @@ public final class TankDrive {
 
         // TODO: reverse motor directions if needed
         //   leftMotors.get(0).setDirection(DcMotorSimple.Direction.REVERSE);
+        // TODO: reverse motor directions if needed
+        //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotors.get(0).setDirection(Const.Drive.Direction.leftFront);
+        leftMotors.get(1).setDirection(Const.Drive.Direction.rightFront);
+        rightMotors.get(0).setDirection(Const.Drive.Direction.leftRear);
+        rightMotors.get(1).setDirection(Const.Drive.Direction.rightRear);
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
-        lazyImu = new LazyHardwareMapImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
+        lazyImu = new LazyHardwareMapImu(hardwareMap,  Const.Drive.Name.imu, new RevHubOrientationOnRobot(
                 PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();

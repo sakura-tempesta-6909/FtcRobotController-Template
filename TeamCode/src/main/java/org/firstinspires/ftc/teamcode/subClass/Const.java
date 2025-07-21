@@ -13,6 +13,8 @@ public class Const {
             public static final String imu = "imu";
         }
 
+        // TODO: reverse motor directions if needed
+        //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         public static class Direction {
             public static final DcMotor.Direction leftFront = DcMotor.Direction.FORWARD;
             public static final DcMotor.Direction rightFront = DcMotor.Direction.REVERSE;
@@ -20,10 +22,14 @@ public class Const {
             public static final DcMotor.Direction rightRear = DcMotor.Direction.REVERSE;
         }
 
+        // TODO: fill in these values based on
+        //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
+        public static final RevHubOrientationOnRobot.LogoFacingDirection LOGO_FACING_DIRECTION = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        public static final RevHubOrientationOnRobot.UsbFacingDirection USB_FACING_DIRECTION = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
         public static final RevHubOrientationOnRobot HUB_ORIENTATION =
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                        LOGO_FACING_DIRECTION,
+                        USB_FACING_DIRECTION
                 );
         public static class AutonomousDrive {
 
