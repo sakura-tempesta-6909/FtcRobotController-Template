@@ -30,11 +30,14 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.component.Component;
 import org.firstinspires.ftc.teamcode.component.Drive;
 import org.firstinspires.ftc.teamcode.state.State;
+import org.firstinspires.ftc.teamcode.subClass.Const;
 import org.firstinspires.ftc.teamcode.subClass.Util;
 
 import java.util.ArrayList;
@@ -92,7 +95,6 @@ public class Main extends OpMode {
             component.readSensors(state);
         });
 
-        state.currentMode = State.Mode.DRIVE;
         state.driveState.imuReset = gamepad1.start;
         state.driveState.xSpeed = Util.applyDeadZone(gamepad1.left_stick_x);
         state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
