@@ -28,89 +28,61 @@
  */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import android.view.animation.LinearInterpolator;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.component.Component;
-import org.firstinspires.ftc.teamcode.component.Drive;
+import org.firstinspires.ftc.teamcode.component.Slider;
+import org.firstinspires.ftc.teamcode.lib.roadrunner.MecanumDrive;
+import org.firstinspires.ftc.teamcode.lib.roadrunner.MecanumDriveSimple;
 import org.firstinspires.ftc.teamcode.state.State;
-import org.firstinspires.ftc.teamcode.subClass.Const;
-import org.firstinspires.ftc.teamcode.subClass.Util;
 
 import java.util.ArrayList;
 
 @TeleOp(name = "Main OpMode", group = "Main")
-public class Main extends OpMode {
+public class Main extends LinearOpMode {
 
     private final ElapsedTime runtime = new ElapsedTime();
     private final ArrayList<Component> components = new ArrayList<>();
     private final State state = new State();
 
-    /*
-     * This is executed once after the driver presses INIT.
-     * ドライバーがINITを押した後、1度実行される
-     */
     @Override
-    public void init() {
-        state.stateInit();
-        components.add(new Drive(hardwareMap));
-    }
+    public void runOpMode() {
+        Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(90));
+        MecanumDriveSimple drive = new MecanumDriveSimple(hardwareMap, initialPose);
 
-    /*
-     * This is executed repeatedly between INIT and PLAY.
-     * ドライバーがINITを押した後からPLAYを押すまでの間、繰り返し実行される
-     */
-    @Override
-    public void init_loop() {
-        state.stateReset();
-        components.forEach(component -> {
-            component.readSensors(state);
-        });
-        components.forEach(component -> {
-            component.applyState(state);
-        });
-        Util.SendLog(state, telemetry);
-    }
+        //Actions.runBlocking(slider.down());
 
-    /*
-     * This is executed once at the start.
-     * 開始時に一度だけ実行される
-     */
-    @Override
-    public void start() {
-        runtime.reset();
-    }
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
+                .lineToY(30)
+                .turn(Math.toRadians(-90))
+                .lineToX(30)
+                .turn(Math.toRadians(-90))
+                .lineToY(0)
+                .turn(Math.toRadians(-90))
+                .lineToX(0)
+                .turn(Math.toRadians(-90));
+//
+//        TrajectoryActionBuilder tab2 = tab1.endTrajectory().fresh()
+//                .lineToY(-60)
+//                .strafeToLinearHeading(new Vector2d(50, 0), Math.toRadians(90));
 
-    /*
-     * This runs continuously while enabled.
-     * Enableの間ずっと実行される
-     */
-    @Override
-    public void loop() {
-        state.stateReset();
-        components.forEach(component -> {
-            component.readSensors(state);
-        });
+        waitForStart();
+        if (isStopRequested()) return;
 
-        state.driveState.imuReset = gamepad1.start;
-        state.driveState.xSpeed = Util.applyDeadZone(gamepad1.left_stick_x);
-        state.driveState.ySpeed = Util.applyDeadZone(gamepad1.left_stick_y);
-        state.driveState.rotation = Util.applyDeadZone(gamepad1.right_stick_x);
-
-        components.forEach(component -> {
-            component.applyState(state);
-        });
-        Util.SendLog(state, telemetry);
-    }
-
-    /*
-     * This is executed once when the code is stopped.
-     * コードが停止されるときに一度だけ実行される
-     */
-    @Override
-    public void stop() {
+        Actions.runBlocking(
+                new SequentialAction(
+                        tab1.build()
+                )
+        );
     }
 }

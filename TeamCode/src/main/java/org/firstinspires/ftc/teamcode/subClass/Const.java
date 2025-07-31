@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subClass;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class Const {
     public static class Drive {
@@ -16,10 +17,10 @@ public class Const {
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         public static class Direction {
-            public static final DcMotor.Direction leftFront = DcMotor.Direction.FORWARD;
+            public static final DcMotor.Direction leftFront = DcMotor.Direction.REVERSE;
             public static final DcMotor.Direction rightFront = DcMotor.Direction.REVERSE;
-            public static final DcMotor.Direction leftRear = DcMotor.Direction.FORWARD;
-            public static final DcMotor.Direction rightRear = DcMotor.Direction.REVERSE;
+            public static final DcMotor.Direction leftRear = DcMotor.Direction.REVERSE;
+            public static final DcMotor.Direction rightRear = DcMotor.Direction.FORWARD;
         }
 
         // TODO: fill in these values based on

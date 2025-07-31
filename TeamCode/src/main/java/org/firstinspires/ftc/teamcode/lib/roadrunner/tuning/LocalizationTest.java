@@ -9,6 +9,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.lib.roadrunner.Drawing;
 import org.firstinspires.ftc.teamcode.lib.roadrunner.MecanumDrive;
+import org.firstinspires.ftc.teamcode.lib.roadrunner.MecanumDriveSimple;
 import org.firstinspires.ftc.teamcode.lib.roadrunner.TankDrive;
 
 public class LocalizationTest extends LinearOpMode {
@@ -17,7 +18,7 @@ public class LocalizationTest extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         if (TuningOpModes.DRIVE_CLASS.equals(MecanumDrive.class)) {
-            MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+            MecanumDriveSimple  drive = new MecanumDriveSimple(hardwareMap, new Pose2d(0, 0, 0));
 
             waitForStart();
 
