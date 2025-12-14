@@ -1,8 +1,15 @@
 package org.firstinspires.ftc.teamcode.subsystem;
 
+import android.graphics.Bitmap;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.function.Consumer;
+import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -12,30 +19,49 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
  * Vision subsystem for AprilTag detection and localization.
+ * Supports camera preview on FTC Dashboard and Driver Hub.
  *
  * AprilTag検出と自己位置推定のためのVisionサブシステム。
+ * FTCダッシュボードとDriver Hubへのカメラプレビュー表示をサポート。
  */
-public class Vision {
+public class Vision implements CameraStreamSource {
     private final AprilTagProcessor aprilTag;
     private final VisionPortal portal;
+    private final FtcDashboard dashboard;
+    private final ExecutorService executor;
+
+    // For dashboard streaming
+    private final AtomicReference<Bitmap> lastFrame = new AtomicReference<>(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
 
     // AprilTag field positions (to be configured for your field)
     // フィールド上のAprilTagの位置（フィールドに合わせて設定してください）
     private static final Map<Integer, Pose2d> TAG_FIELD_POSES = new HashMap<>();
 
     static {
-        // Example: INTO THE DEEP field tags
-        // 例: INTO THE DEEPフィールドのタグ
+        // Example: INTO THE DEEP field tags (2024-2025 season)
+        // 例: INTO THE DEEPフィールドのタグ（2024-2025シーズン）
+        // Blue alliance tags
         // TAG_FIELD_POSES.put(1, new Pose2d(60, 36, Math.toRadians(180)));
         // TAG_FIELD_POSES.put(2, new Pose2d(60, 0, Math.toRadians(180)));
+        // TAG_FIELD_POSES.put(3, new Pose2d(60, -36, Math.toRadians(180)));
+        // Red alliance tags
+        // TAG_FIELD_POSES.put(4, new Pose2d(-60, -36, Math.toRadians(0)));
+        // TAG_FIELD_POSES.put(5, new Pose2d(-60, 0, Math.toRadians(0)));
+        // TAG_FIELD_POSES.put(6, new Pose2d(-60, 36, Math.toRadians(0)));
         // Configure these based on your field setup
     }
 
     public Vision(HardwareMap hardwareMap) {
+        dashboard = FtcDashboard.getInstance();
+        executor = Executors.newSingleThreadExecutor();
+
         aprilTag = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
@@ -45,7 +71,30 @@ public class Vision {
         portal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, RobotConfig.Vision.CAMERA_NAME))
                 .addProcessor(aprilTag)
+                // Driver Hubにプレビュー表示
+                .enableLiveView(true)
+                .setAutoStopLiveView(false)
                 .build();
+
+        // FTC Dashboardにカメラストリームを設定
+        dashboard.startCameraStream(this, 30);
+    }
+
+    /**
+     * CameraStreamSource implementation for FTC Dashboard.
+     * FTCダッシュボード用のカメラストリーム実装。
+     */
+    @Override
+    public void getFrameBitmap(Continuation<? extends Consumer<Bitmap>> continuation) {
+        continuation.dispatch(bitmapConsumer -> {
+            // Get frame from VisionPortal
+            portal.getFrameBitmap(Continuation.create(executor, bitmap -> {
+                if (bitmap != null) {
+                    lastFrame.set(bitmap);
+                }
+                bitmapConsumer.accept(lastFrame.get());
+            }));
+        });
     }
 
     /**
@@ -94,7 +143,7 @@ public class Vision {
      * Calculate robot pose from AprilTag detection.
      * AprilTag検出からロボットの位置を計算する。
      *
-     * @param detection The AprilTag detection
+     * @param detection    The AprilTag detection
      * @param tagFieldPose The tag's position on the field
      * @return Estimated robot pose
      */
@@ -103,13 +152,13 @@ public class Vision {
             return null;
         }
 
-        double tagHeading = tagFieldPose.heading;
+        double tagHeading = tagFieldPose.heading.toDouble();
 
         // Transform camera-relative position to field coordinates
-        double robotX = tagFieldPose.x
+        double robotX = tagFieldPose.position.x
                 - detection.ftcPose.y * Math.cos(tagHeading)
                 + detection.ftcPose.x * Math.sin(tagHeading);
-        double robotY = tagFieldPose.y
+        double robotY = tagFieldPose.position.y
                 - detection.ftcPose.y * Math.sin(tagHeading)
                 - detection.ftcPose.x * Math.cos(tagHeading);
         double robotHeading = tagHeading - Math.toRadians(detection.ftcPose.yaw);
@@ -145,10 +194,28 @@ public class Vision {
     }
 
     /**
-     * Close vision portal.
-     * VisionPortalを閉じる。
+     * Check if any AprilTag is currently visible.
+     * AprilTagが現在見えているかどうかを確認する。
+     */
+    public boolean isTagVisible() {
+        return !getAllDetections().isEmpty();
+    }
+
+    /**
+     * Check if a specific AprilTag is visible.
+     * 特定のAprilTagが見えているかどうかを確認する。
+     */
+    public boolean isTagVisible(int tagId) {
+        return getDetection(tagId) != null;
+    }
+
+    /**
+     * Close vision portal and stop dashboard stream.
+     * VisionPortalを閉じ、ダッシュボードストリームを停止する。
      */
     public void close() {
+        dashboard.stopCameraStream();
+        executor.shutdown();
         portal.close();
     }
 }

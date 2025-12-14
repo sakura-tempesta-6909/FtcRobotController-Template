@@ -1,10 +1,15 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.canvas.Canvas;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.action.Action;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
+import org.firstinspires.ftc.teamcode.lib.Drawing;
 import org.firstinspires.ftc.teamcode.subsystem.Drive;
 import org.firstinspires.ftc.teamcode.subsystem.Vision;
 
@@ -30,16 +35,27 @@ public class Robot {
     // Action management
     private final List<Action> runningActions = new ArrayList<>();
 
+    // FTC Dashboard for telemetry
+    private final FtcDashboard dashboard = FtcDashboard.getInstance();
+
     // Telemetry (optional)
     private Telemetry telemetry;
 
     /**
-     * Initialize robot with all subsystems.
-     * 全サブシステムでロボットを初期化する。
+     * Initialize robot with all subsystems at origin.
+     * 原点で全サブシステムを初期化する。
      */
     public Robot(HardwareMap hardwareMap) {
+        this(hardwareMap, new Pose2d(0, 0, 0));
+    }
+
+    /**
+     * Initialize robot with all subsystems at specified pose.
+     * 指定位置で全サブシステムを初期化する。
+     */
+    public Robot(HardwareMap hardwareMap, Pose2d initialPose) {
         // Initialize subsystems
-        drive = new Drive(hardwareMap);
+        drive = new Drive(hardwareMap, initialPose);
         vision = new Vision(hardwareMap);
 
         // Connect subsystems
@@ -84,6 +100,7 @@ public class Robot {
      */
     public void cancelAllActions() {
         runningActions.clear();
+        drive.stop();
     }
 
     // ===================
@@ -98,10 +115,27 @@ public class Robot {
         // Update localization
         drive.updateLocalization();
 
-        // Run actions and remove completed ones
-        runningActions.removeIf(action -> !action.run());
+        // Create telemetry packet for FTC Dashboard
+        TelemetryPacket packet = new TelemetryPacket();
 
-        // Update telemetry
+        // Draw robot on field view
+        Pose2d pose = drive.getPose();
+        Canvas canvas = packet.fieldOverlay();
+        canvas.setStroke("#3F51B5");  // Blue color
+        Drawing.drawRobot(canvas, pose);
+
+        // Add pose data to packet
+        packet.put("x", pose.position.x);
+        packet.put("y", pose.position.y);
+        packet.put("heading (deg)", Math.toDegrees(pose.heading.toDouble()));
+
+        // Run actions and remove completed ones
+        runningActions.removeIf(action -> !action.run(packet));
+
+        // Send packet to dashboard
+        dashboard.sendTelemetryPacket(packet);
+
+        // Update local telemetry
         if (telemetry != null) {
             updateTelemetry();
         }
@@ -112,11 +146,12 @@ public class Robot {
      * ロボットの状態でtelemetryを更新する。
      */
     private void updateTelemetry() {
-        telemetry.addData("Pose", drive.getPose());
-        telemetry.addData("Heading (deg)", Math.toDegrees(drive.getHeading()));
+        Pose2d pose = drive.getPose();
+        telemetry.addData("x", "%.2f", pose.position.x);
+        telemetry.addData("y", "%.2f", pose.position.y);
+        telemetry.addData("heading (deg)", "%.2f", Math.toDegrees(pose.heading.toDouble()));
         telemetry.addData("Actions Running", runningActions.size());
-
-        // Add more telemetry as needed
+        telemetry.addData("AprilTag Visible", vision.isTagVisible());
     }
 
     // ===================

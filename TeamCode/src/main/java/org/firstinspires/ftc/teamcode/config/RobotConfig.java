@@ -50,6 +50,9 @@ public final class RobotConfig {
     // ===================
     public static final class Control {
         public static final double DEAD_ZONE = 0.1;
-        public static final double STRAFE_CORRECTION = 1.1;
+
+        // AprilTag vision correction weight (0.0 = no correction, 1.0 = full correction)
+        // AprilTag視覚補正の重み（0.0 = 補正なし、1.0 = 完全補正）
+        public static final double VISION_CORRECTION_ALPHA = 0.3;
     }
 }
