@@ -18,8 +18,9 @@ import org.firstinspires.ftc.teamcode.robot.Robot;
 @Autonomous(name = "Main Auto", group = "Main")
 public class MainAuto extends OpMode {
 
-    // Starting pose
-    private static final Pose2d START_POSE = new Pose2d(0, 0, 0);
+    // Starting pose（MeepMeepと同じ座標系）
+    // x: 左右、y: 前後、heading: 0=右、-90°=手前向き
+    private static final Pose2d START_POSE = new Pose2d(0, -65, Math.toRadians(-90));
 
     private Robot robot;
     private boolean autoStarted = false;
@@ -90,30 +91,32 @@ public class MainAuto extends OpMode {
      * Autonomousアクションシーケンスを構築する。
      */
     private Action buildAutonomous() {
+        // MeepMeep座標系: START_POSE = (0, -65, -90°)
+        // ロボットはフィールド下部中央、フィールド中心方向を向いている
         return new SequentialAction(
-                // Step 1: Drive forward
+                // Step 1: フィールド中心に向かって前進
                 robot.drive.actionBuilder(START_POSE)
-                        .lineToX(24)
+                        .lineToY(-40)
                         .build(),
 
-                // Step 2: Wait briefly
+                // Step 2: 少し待機
                 new SleepAction(0.5),
 
-                // Step 3: Strafe right
-                robot.drive.actionBuilder(new Pose2d(24, 0, 0))
-                        .strafeTo(new Vector2d(24, -24))
+                // Step 3: 右にストレイフ
+                robot.drive.actionBuilder(new Pose2d(0, -40, Math.toRadians(-90)))
+                        .strafeTo(new Vector2d(24, -40))
                         .build(),
 
-                // Step 4: Correct pose with AprilTag (if visible)
+                // Step 4: AprilTagで位置補正（見える場合）
                 robot.drive.correctPoseWithTag(1),
 
-                // Step 5: Turn and drive to scoring position
-                robot.drive.actionBuilder(new Pose2d(24, -24, 0))
-                        .turnTo(Math.toRadians(90))
-                        .lineToY(-48)
+                // Step 5: 回転してスコアリング位置へ
+                robot.drive.actionBuilder(new Pose2d(24, -40, Math.toRadians(-90)))
+                        .turnTo(Math.toRadians(0))
+                        .lineToX(48)
                         .build()
 
-                // Add more steps as needed:
+                // 必要に応じてステップを追加:
                 // robot.lift.toHigh(),
                 // robot.intake.open(),
                 // new SleepAction(0.3),
@@ -126,28 +129,29 @@ public class MainAuto extends OpMode {
      */
     @SuppressWarnings("unused")
     private Action buildComplexAutonomous() {
+        // MeepMeep座標系での複雑なAutonomous例
         return new SequentialAction(
-                // Drive while preparing scoring mechanism
+                // 移動しながらスコアリング機構を準備
                 new ParallelAction(
                         robot.drive.actionBuilder(START_POSE)
-                                .splineTo(new Vector2d(36, 24), Math.toRadians(45))
+                                .splineTo(new Vector2d(36, -24), Math.toRadians(45))
                                 .build()
-                        // robot.lift.toHigh()  // Uncomment when Lift is added
+                        // robot.lift.toHigh()  // Liftを追加したらコメント解除
                 ),
 
-                // Align to AprilTag for precise scoring
+                // AprilTagに合わせて精密なスコアリング
                 robot.drive.alignToTag(1, new Pose2d(15, 0, 0)),
 
-                // Score
+                // スコア
                 // robot.intake.open(),
                 new SleepAction(0.3),
 
-                // Return to starting area
+                // スタートエリアに戻る
                 new ParallelAction(
                         robot.drive.actionBuilder(robot.drive.getPose())
-                                .lineToX(0)
+                                .lineToY(-60)
                                 .build()
-                        // robot.lift.toLow()  // Uncomment when Lift is added
+                        // robot.lift.toLow()  // Liftを追加したらコメント解除
                 )
         );
     }

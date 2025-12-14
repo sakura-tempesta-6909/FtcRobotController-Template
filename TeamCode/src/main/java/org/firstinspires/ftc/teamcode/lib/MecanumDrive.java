@@ -44,6 +44,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.*;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.lib.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.lib.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.lib.messages.MecanumLocalizerInputsMessage;
@@ -240,6 +241,8 @@ public final class MecanumDrive {
 
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
@@ -248,7 +251,9 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new DriveLocalizer(pose);
+        // Use inPerTick from RobotConfig (calculated from dead wheel specs)
+        // RobotConfigからinPerTickを使用（デッドホイールの仕様から計算）
+        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), RobotConfig.DeadWheel.IN_PER_TICK, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -454,14 +459,14 @@ public final class MecanumDrive {
     public PoseVelocity2d updatePoseEstimate() {
         PoseVelocity2d vel = localizer.update();
         poseHistory.add(localizer.getPose());
-        
+
         while (poseHistory.size() > 100) {
             poseHistory.removeFirst();
         }
 
         estimatedPoseWriter.write(new PoseMessage(localizer.getPose()));
-        
-        
+
+
         return vel;
     }
 

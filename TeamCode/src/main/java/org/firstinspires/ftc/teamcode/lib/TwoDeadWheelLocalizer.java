@@ -4,12 +4,14 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.*;
 import com.acmerobotics.roadrunner.ftc.*;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.lib.messages.TwoDeadWheelInputsMessage;
 
 import java.lang.Math;
@@ -17,8 +19,10 @@ import java.lang.Math;
 @Config
 public final class TwoDeadWheelLocalizer implements Localizer {
     public static class Params {
-        public double parYTicks = 0.0; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = 0.0; // x position of the perpendicular encoder (in tick units)
+        // These values are loaded from RobotConfig.DeadWheel
+        // RobotConfig.DeadWheelから読み込まれる
+        public double parYTicks = RobotConfig.DeadWheel.PAR_Y_TICKS;
+        public double perpXTicks = RobotConfig.DeadWheel.PERP_X_TICKS;
     }
 
     public static Params PARAMS = new Params();
@@ -36,14 +40,19 @@ public final class TwoDeadWheelLocalizer implements Localizer {
     private Pose2d pose;
 
     public TwoDeadWheelLocalizer(HardwareMap hardwareMap, IMU imu, double inPerTick, Pose2d initialPose) {
-        // TODO: make sure your config has **motors** with these names (or change them)
-        //   the encoders should be plugged into the slot matching the named motor
-        //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
-        par = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "par")));
-        perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "perp")));
+        // Encoders are plugged into motor ports
+        // エンコーダーはモーターポートに接続
+        par = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, RobotConfig.DriveMotor.RIGHT_REAR)));
+        perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, RobotConfig.DriveMotor.LEFT_REAR)));
 
-        // TODO: reverse encoder directions if needed
-        //   par.setDirection(DcMotorSimple.Direction.REVERSE);
+        // Set encoder directions based on RobotConfig
+        // RobotConfigに基づいてエンコーダー方向を設定
+        if (RobotConfig.DeadWheel.PAR_REVERSED) {
+            par.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+        if (RobotConfig.DeadWheel.PERP_REVERSED) {
+            perp.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
 
         this.imu = imu;
 

@@ -9,11 +9,15 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.function.Consumer;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.concurrent.TimeUnit;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,22 +44,22 @@ public class Vision implements CameraStreamSource {
     // For dashboard streaming
     private final AtomicReference<Bitmap> lastFrame = new AtomicReference<>(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
 
-    // AprilTag field positions (to be configured for your field)
-    // フィールド上のAprilTagの位置（フィールドに合わせて設定してください）
-    private static final Map<Integer, Pose2d> TAG_FIELD_POSES = new HashMap<>();
+    /**
+     * Get tag field pose dynamically (supports Dashboard updates).
+     * タグのフィールド位置を動的に取得（Dashboard更新をサポート）
+     */
+    private Pose2d getTagFieldPoseDynamic(int tagId) {
+        double[] pose = null;
+        if (tagId == RobotConfig.AprilTag.BLUE_GOAL_ID) {
+            pose = RobotConfig.AprilTag.getBlueGoal();
+        } else if (tagId == RobotConfig.AprilTag.RED_GOAL_ID) {
+            pose = RobotConfig.AprilTag.getRedGoal();
+        }
 
-    static {
-        // Example: INTO THE DEEP field tags (2024-2025 season)
-        // 例: INTO THE DEEPフィールドのタグ（2024-2025シーズン）
-        // Blue alliance tags
-        // TAG_FIELD_POSES.put(1, new Pose2d(60, 36, Math.toRadians(180)));
-        // TAG_FIELD_POSES.put(2, new Pose2d(60, 0, Math.toRadians(180)));
-        // TAG_FIELD_POSES.put(3, new Pose2d(60, -36, Math.toRadians(180)));
-        // Red alliance tags
-        // TAG_FIELD_POSES.put(4, new Pose2d(-60, -36, Math.toRadians(0)));
-        // TAG_FIELD_POSES.put(5, new Pose2d(-60, 0, Math.toRadians(0)));
-        // TAG_FIELD_POSES.put(6, new Pose2d(-60, 36, Math.toRadians(0)));
-        // Configure these based on your field setup
+        if (pose != null && pose.length >= 3) {
+            return new Pose2d(pose[0], pose[1], Math.toRadians(pose[2]));
+        }
+        return null;
     }
 
     public Vision(HardwareMap hardwareMap) {
@@ -76,8 +80,64 @@ public class Vision implements CameraStreamSource {
                 .setAutoStopLiveView(false)
                 .build();
 
+        // カメラが準備できるまで待機してから露出設定を適用
+        while (portal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            // Wait for camera to start streaming
+        }
+        applyExposureSettings();
+
         // FTC Dashboardにカメラストリームを設定
         dashboard.startCameraStream(this, 30);
+    }
+
+    /**
+     * Apply exposure settings from RobotConfig.
+     * RobotConfigから露出設定を適用する。
+     * Dashboardから値を変更した後にこのメソッドを呼び出すと反映される。
+     */
+    public void applyExposureSettings() {
+        if (portal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            return;
+        }
+
+        ExposureControl exposureControl = portal.getCameraControl(ExposureControl.class);
+        GainControl gainControl = portal.getCameraControl(GainControl.class);
+
+        if (exposureControl != null) {
+            if (RobotConfig.Vision.AUTO_EXPOSURE) {
+                exposureControl.setMode(ExposureControl.Mode.Auto);
+            } else {
+                exposureControl.setMode(ExposureControl.Mode.Manual);
+                exposureControl.setExposure(RobotConfig.Vision.MANUAL_EXPOSURE_MS, TimeUnit.MILLISECONDS);
+            }
+        }
+
+        if (gainControl != null && !RobotConfig.Vision.AUTO_EXPOSURE) {
+            gainControl.setGain(RobotConfig.Vision.GAIN);
+        }
+    }
+
+    /**
+     * Get current exposure info for debugging.
+     * デバッグ用の現在の露出情報を取得する。
+     */
+    public String getExposureInfo() {
+        if (portal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            return "Camera not streaming";
+        }
+
+        ExposureControl exposureControl = portal.getCameraControl(ExposureControl.class);
+        GainControl gainControl = portal.getCameraControl(GainControl.class);
+
+        StringBuilder info = new StringBuilder();
+        if (exposureControl != null) {
+            info.append("Exposure: ").append(exposureControl.getExposure(TimeUnit.MILLISECONDS)).append("ms");
+            info.append(" (").append(exposureControl.getMode()).append(")");
+        }
+        if (gainControl != null) {
+            info.append(", Gain: ").append(gainControl.getGain());
+        }
+        return info.toString();
     }
 
     /**
@@ -128,7 +188,7 @@ public class Vision implements CameraStreamSource {
      * タグIDに対応するフィールド上の位置を取得する。
      */
     public Pose2d getTagFieldPose(int tagId) {
-        return TAG_FIELD_POSES.get(tagId);
+        return getTagFieldPoseDynamic(tagId);
     }
 
     /**
@@ -136,12 +196,16 @@ public class Vision implements CameraStreamSource {
      * 設定された全てのタグのフィールド位置を取得する。
      */
     public Map<Integer, Pose2d> getAllTagFieldPoses() {
-        return Collections.unmodifiableMap(TAG_FIELD_POSES);
+        Map<Integer, Pose2d> poses = new HashMap<>();
+        poses.put(RobotConfig.AprilTag.BLUE_GOAL_ID, getTagFieldPoseDynamic(RobotConfig.AprilTag.BLUE_GOAL_ID));
+        poses.put(RobotConfig.AprilTag.RED_GOAL_ID, getTagFieldPoseDynamic(RobotConfig.AprilTag.RED_GOAL_ID));
+        return poses;
     }
 
     /**
      * Calculate robot pose from AprilTag detection.
      * AprilTag検出からロボットの位置を計算する。
+     * カメラオフセット（RobotConfig.Vision）を考慮。
      *
      * @param detection    The AprilTag detection
      * @param tagFieldPose The tag's position on the field
@@ -152,16 +216,47 @@ public class Vision implements CameraStreamSource {
             return null;
         }
 
+        // タグの向き（フィールド座標系）
         double tagHeading = tagFieldPose.heading.toDouble();
 
-        // Transform camera-relative position to field coordinates
-        double robotX = tagFieldPose.position.x
-                - detection.ftcPose.y * Math.cos(tagHeading)
-                + detection.ftcPose.x * Math.sin(tagHeading);
-        double robotY = tagFieldPose.position.y
-                - detection.ftcPose.y * Math.sin(tagHeading)
-                - detection.ftcPose.x * Math.cos(tagHeading);
-        double robotHeading = tagHeading - Math.toRadians(detection.ftcPose.yaw);
+        // Camera offset from RobotConfig (Dashboardから動的に取得)
+        double cameraXOffset = RobotConfig.Vision.getCameraXOffset();
+        double cameraYOffset = RobotConfig.Vision.getCameraYOffset();
+        double cameraHeadingOffset = Math.toRadians(RobotConfig.Vision.CAMERA_HEADING_OFFSET);
+
+        // カメラのフィールド上の向きを計算
+        // タグがtagHeadingを向いている時、カメラはその反対側(+π)から見ている
+        // yawはカメラから見たタグの回転角度（正 = タグが反時計回りに見える = カメラが時計回りにずれている）
+        double cameraFieldHeading = tagHeading + Math.PI + Math.toRadians(detection.ftcPose.yaw);
+
+        // カメラから見たタグの位置 (ftcPose.x = 右方向, ftcPose.y = 前方向)
+        double camToTagX = detection.ftcPose.x;  // カメラの右方向
+        double camToTagY = detection.ftcPose.y;  // カメラの前方向
+
+        // カメラ座標系からフィールド座標系への変換
+        // カメラの前方向(+Y)はcameraFieldHeading、右方向(+X)はcameraFieldHeading - 90°
+        // camToTag_field = rotate(camToTag_camera, cameraFieldHeading)
+        // tagToCamera_field = -camToTag_field
+        double sinH = Math.sin(cameraFieldHeading);
+        double cosH = Math.cos(cameraFieldHeading);
+        double tagToCamera_fieldX = -(camToTagX * sinH + camToTagY * cosH);
+        double tagToCamera_fieldY = -(-camToTagX * cosH + camToTagY * sinH);
+
+        // カメラのフィールド位置
+        double cameraX = tagFieldPose.position.x + tagToCamera_fieldX;
+        double cameraY = tagFieldPose.position.y + tagToCamera_fieldY;
+
+        // ロボットの向き（カメラの向き - カメラオフセット）
+        double robotHeading = cameraFieldHeading - cameraHeadingOffset;
+
+        // カメラ位置からロボット中心位置を計算
+        // カメラはロボット中心から (cameraXOffset = 右, cameraYOffset = 前) の位置にある
+        // ロボット座標系での右方向 = robotHeading - 90° = sin(robotHeading) in field X
+        // ロボット座標系での前方向 = robotHeading = cos(robotHeading) in field X
+        double sinR = Math.sin(robotHeading);
+        double cosR = Math.cos(robotHeading);
+        double robotX = cameraX - (cameraXOffset * sinR + cameraYOffset * cosR);
+        double robotY = cameraY - (-cameraXOffset * cosR + cameraYOffset * sinR);
 
         return new Pose2d(robotX, robotY, robotHeading);
     }
@@ -179,7 +274,7 @@ public class Vision implements CameraStreamSource {
         double bestRange = Double.MAX_VALUE;
 
         for (AprilTagDetection det : detections) {
-            Pose2d tagPose = TAG_FIELD_POSES.get(det.id);
+            Pose2d tagPose = getTagFieldPoseDynamic(det.id);
             if (tagPose != null && det.ftcPose.range < bestRange) {
                 best = det;
                 bestRange = det.ftcPose.range;
@@ -190,7 +285,7 @@ public class Vision implements CameraStreamSource {
             return null;
         }
 
-        return calculateRobotPose(best, TAG_FIELD_POSES.get(best.id));
+        return calculateRobotPose(best, getTagFieldPoseDynamic(best.id));
     }
 
     /**

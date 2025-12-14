@@ -80,6 +80,9 @@ public class Drive {
         mecanumDrive.updatePoseEstimate();
 
         // AprilTag correction if vision is available
+        // デバッグ用: 一時的に無効化
+        // TODO: 問題解決後にコメントを外す
+        /*
         if (vision != null) {
             Pose2d visionPose = vision.getBestPoseEstimate();
             if (visionPose != null) {
@@ -94,6 +97,7 @@ public class Drive {
                 setPose(correctedPose);
             }
         }
+        */
     }
 
     // ===================
@@ -111,9 +115,11 @@ public class Drive {
     public void drive(double xSpeed, double ySpeed, double rotation) {
         double heading = getHeading();
 
-        // Convert to field-centric
-        double rotX = xSpeed * Math.cos(-heading) - ySpeed * Math.sin(-heading);
-        double rotY = xSpeed * Math.sin(-heading) + ySpeed * Math.cos(-heading);
+        // Convert field-centric input to robot-centric
+        // Road Runnerではheading=90°が前向き(+Y)なので、90°オフセットを適用
+        double adjustedHeading = heading - Math.PI / 2;
+        double rotX = xSpeed * Math.cos(adjustedHeading) - ySpeed * Math.sin(adjustedHeading);
+        double rotY = xSpeed * Math.sin(adjustedHeading) + ySpeed * Math.cos(adjustedHeading);
 
         mecanumDrive.setDrivePowers(new PoseVelocity2d(
                 new Vector2d(rotY, -rotX),

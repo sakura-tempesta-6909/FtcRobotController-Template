@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 /**
@@ -13,13 +14,34 @@ import org.firstinspires.ftc.teamcode.robot.Robot;
 @TeleOp(name = "Main TeleOp", group = "Main")
 public class MainTeleOp extends OpMode {
 
+    // ループ時間計測用
+    private long lastLoopTime = 0;
+    private double loopTimeMs = 0;
+    private double avgLoopTimeMs = 0;
+    private static final double AVG_ALPHA = 0.1;  // 移動平均の係数
+
+    // AprilTagトグル用
+    private boolean aprilTagEnabled = false;
+    private boolean lastY = false;
+    private boolean lastX = false;
+
     // ===================
-    // 初期位置の設定
+    // 初期位置の設定（MeepMeepと同じ座標系）
     // ===================
-    // x: 前後（正 = 前）
-    // y: 左右（正 = 左）
-    // heading: 向き（ラジアン、0 = 前向き）
-    private static final Pose2d START_POSE = new Pose2d(0, 0, Math.toRadians(0));
+    // cm単位で入力、自動でインチに変換
+    // x: 左右（正 = 右）
+    // y: 前後（正 = 奥）
+    // heading: 向き（度、0 = 右、90 = 奥向き）
+    private static final double START_X_CM = 10.0;
+//    private static final double START_Y_CM = -163.0;
+    private static final double START_Y_CM = -163.0 -61 ;
+    private static final double START_HEADING_DEG = 90.0;
+
+    private static final Pose2d START_POSE = new Pose2d(
+            START_X_CM * RobotConfig.CM_TO_INCH,
+            START_Y_CM * RobotConfig.CM_TO_INCH,
+            Math.toRadians(START_HEADING_DEG)
+    );
 
     private Robot robot;
 
@@ -32,27 +54,26 @@ public class MainTeleOp extends OpMode {
         robot = new Robot(hardwareMap, START_POSE);
         robot.setTelemetry(telemetry);
 
+        // AprilTagはデフォルトで無効（Yボタンでトグル）
+        // AprilTag disabled by default (toggle with Y button)
+        robot.setAprilTagEnabled(false);
+
         telemetry.addData("Status", "Initialized");
         telemetry.addData("Start Pose", START_POSE.toString());
+        telemetry.addData("AprilTag", "Disabled (press Y to toggle)");
     }
 
     /**
      * Called repeatedly between INIT and START.
      * INITからSTARTの間、繰り返し呼ばれる。
-     * AprilTagで初期位置を自動検出する。
      */
     @Override
     public void init_loop() {
+        // AprilTagは無効のままupdateを呼ぶ
         robot.update();
 
-        // AprilTagで初期位置を検出
-        if (robot.vision.isTagVisible()) {
-            telemetry.addData("AprilTag", "Detected - Pose calibrated");
-        } else {
-            telemetry.addData("AprilTag", "Not visible - Point camera at tag");
-        }
-
         telemetry.addData("Pose", robot.drive.getPose());
+        telemetry.addData("AprilTag", "Disabled (press Y after START to enable)");
         telemetry.update();
     }
 
@@ -71,6 +92,14 @@ public class MainTeleOp extends OpMode {
      */
     @Override
     public void loop() {
+        // ループ時間計測開始
+        long currentTime = System.nanoTime();
+        if (lastLoopTime != 0) {
+            loopTimeMs = (currentTime - lastLoopTime) / 1_000_000.0;
+            avgLoopTimeMs = avgLoopTimeMs * (1 - AVG_ALPHA) + loopTimeMs * AVG_ALPHA;
+        }
+        lastLoopTime = currentTime;
+
         // ===================
         // Drive Control（手動操作）
         // ===================
@@ -78,7 +107,7 @@ public class MainTeleOp extends OpMode {
         double ySpeed = Robot.applyDeadZone(-gamepad1.left_stick_y);
         double rotation = Robot.applyDeadZone(gamepad1.right_stick_x);
 
-        // Actionが実行中でなければ手動操作
+        // Actionが実行中でなければ手動操作（フィールドセントリック）
         if (!robot.isBusy()) {
             robot.drive.drive(xSpeed, ySpeed, rotation);
         }
@@ -99,6 +128,21 @@ public class MainTeleOp extends OpMode {
             robot.cancelAllActions();
         }
 
+        // AprilTagトグル（Yボタン）
+        // Toggle AprilTag (Y button)
+        if (gamepad1.y && !lastY) {
+            aprilTagEnabled = !aprilTagEnabled;
+            robot.setAprilTagEnabled(aprilTagEnabled);
+        }
+        lastY = gamepad1.y;
+
+        // 露出設定を再適用（Xボタン）
+        // Dashboardで値を変更後にXを押すと反映
+        if (gamepad1.x && !lastX) {
+            robot.vision.applyExposureSettings();
+        }
+        lastX = gamepad1.x;
+
         // ===================
         // Subsystem Controls
         // ===================
@@ -111,6 +155,12 @@ public class MainTeleOp extends OpMode {
         // （この中でAprilTagによる位置補正が自動で行われる）
         // ===================
         robot.update();
+
+        // ループ時間をテレメトリに表示
+        telemetry.addData("Loop Time", "%.1f ms (avg: %.1f ms)", loopTimeMs, avgLoopTimeMs);
+        telemetry.addData("Loop Rate", "%.1f Hz", 1000.0 / avgLoopTimeMs);
+        telemetry.addData("AprilTag", aprilTagEnabled ? "Enabled (Y to disable)" : "Disabled (Y to enable)");
+        telemetry.addData("Exposure", robot.vision.getExposureInfo() + " (X to apply)");
         telemetry.update();
     }
 
