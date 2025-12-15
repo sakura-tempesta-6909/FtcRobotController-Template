@@ -57,17 +57,17 @@ public class RobotConfig {
 
         // Camera offset from robot center (cm単位)
         // カメラのロボット中心からのオフセット
-        // X: 正 = カメラがロボット中心より右
+        // X: 正 = カメラがロボット中心より右、負 = 左
         // Y: 正 = カメラがロボット中心より前
         // Dashboardから調整可能
-        public static double CAMERA_X_OFFSET_CM = 10.0;
-        public static double CAMERA_Y_OFFSET_CM = 13.0;
+        public static double CAMERA_X_OFFSET_CM = 0.0;  // 左に10cm
+        public static double CAMERA_Y_OFFSET_CM = 19.0;   // 前に17cm
 
         // Camera heading offset from robot heading (degrees)
         // カメラの向きのロボット向きからのオフセット（度）
         // 0 = カメラが前向き、正 = カメラが右向き
         // Dashboardから調整可能
-        public static double CAMERA_HEADING_OFFSET = 35.0;
+        public static double CAMERA_HEADING_OFFSET = 0.0;
 
         // === カメラ露出設定 (Dashboardから調整可能) ===
         // 明るすぎる環境では露出を下げる、暗い環境では上げる
@@ -104,17 +104,19 @@ public class RobotConfig {
         public static final double TAG_SIZE_CM = 41.91;
 
         // --- GOAL Tags (on field) - Dashboardから調整可能 ---
-        // Blue Alliance Goal
+        // Blue Alliance Goal (DECODE公式データ)
+        // フィールド中央を向いている (heading = atan2(141, 148) ≈ 45°)
         public static final int BLUE_GOAL_ID = 20;
-        public static double BLUE_GOAL_X_CM = -138.0;
-        public static double BLUE_GOAL_Y_CM = -147.0;
-        public static double BLUE_GOAL_HEADING = 47.0;  // degrees
+        public static double BLUE_GOAL_X_CM = -148.0;
+        public static double BLUE_GOAL_Y_CM = -141.0;
+        public static double BLUE_GOAL_HEADING = 45.0;
 
-        // Red Alliance Goal
+        // Red Alliance Goal (キャリブレーション調整済み)
+        // 公式データ(-148, 141)から誤差補正済み
         public static final int RED_GOAL_ID = 24;
-        public static double RED_GOAL_X_CM = -138.0;
-        public static double RED_GOAL_Y_CM = 147.0;
-        public static double RED_GOAL_HEADING = -47.0;  // degrees
+        public static double RED_GOAL_X_CM = -128.0;  // -119 - 8.7
+        public static double RED_GOAL_Y_CM = 103.0;   // 89 + 14.2
+        public static double RED_GOAL_HEADING = -45.0;
 
         // Helper method to get tag pose in inches
         public static double[] getBlueGoal() {
@@ -166,8 +168,7 @@ public class RobotConfig {
         // Perpendicular encoder position (measures left/right)
         // パーペンディキュラーエンコーダーの位置（左右移動を計測）
         // X = ロボット中心から前後の距離 (cm, 正 = 前)
-        // TODO: 実測値を入力してください
-        public static final double PERP_X_CM = 0.0;
+        public static final double PERP_X_CM = -20.0;  // 後方20cm
 
         // Convert to tick units for TwoDeadWheelLocalizer
         // TwoDeadWheelLocalizer用にティック単位に変換

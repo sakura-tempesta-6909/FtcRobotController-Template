@@ -103,16 +103,47 @@ public class Robot {
     // AprilTag位置の履歴（軌跡表示用）
     private Pose2d lastAprilTagPose = null;
 
-    // AprilTag処理を有効にするかどうか（表示のみ、位置補正なし）
-    // Whether to enable AprilTag processing (display only, no pose correction)
-    private boolean aprilTagEnabled = true;
+    // 位置補正の重み (0.0 = 補正なし, 1.0 = 完全にAprilTagの値を使用)
+    private static final double CORRECTION_ALPHA = 0.5;
 
     /**
-     * Enable or disable AprilTag processing.
-     * AprilTag処理を有効/無効にする。
+     * Correct odometry pose using AprilTag detection.
+     * AprilTag検出を使用してオドメトリ位置を補正する。
+     *
+     * @return true if correction was applied, false if no AprilTag visible
      */
-    public void setAprilTagEnabled(boolean enabled) {
-        this.aprilTagEnabled = enabled;
+    public boolean correctPoseWithAprilTag() {
+        Pose2d aprilTagPose = vision.getBestPoseEstimate();
+        if (aprilTagPose == null) {
+            return false;
+        }
+
+        Pose2d currentPose = drive.getPose();
+
+        // 重み付き平均で補正 (急激な変化を防ぐ)
+        Pose2d correctedPose = new Pose2d(
+                currentPose.position.x * (1 - CORRECTION_ALPHA) + aprilTagPose.position.x * CORRECTION_ALPHA,
+                currentPose.position.y * (1 - CORRECTION_ALPHA) + aprilTagPose.position.y * CORRECTION_ALPHA,
+                currentPose.heading.toDouble() * (1 - CORRECTION_ALPHA) + aprilTagPose.heading.toDouble() * CORRECTION_ALPHA
+        );
+
+        drive.setPose(correctedPose);
+        return true;
+    }
+
+    /**
+     * Directly set odometry pose to AprilTag pose (no smoothing).
+     * オドメトリ位置を直接AprilTag位置に設定する（スムージングなし）。
+     *
+     * @return true if pose was set, false if no AprilTag visible
+     */
+    public boolean resetPoseToAprilTag() {
+        Pose2d aprilTagPose = vision.getBestPoseEstimate();
+        if (aprilTagPose == null) {
+            return false;
+        }
+        drive.setPose(aprilTagPose);
+        return true;
     }
 
     /**
@@ -139,49 +170,37 @@ public class Robot {
         packet.put("Odometry y", odometryPose.position.y);
         packet.put("heading (deg)", Math.toDegrees(odometryPose.heading.toDouble()));
 
-        // === AprilTag位置（緑）- 表示のみ ===
-        if (aprilTagEnabled) {
-            // デバッグ: 検出された生データを表示
-            List<AprilTagDetection> detections = vision.getAllDetections();
-            packet.put("AprilTag count", detections.size());
+        // === AprilTag位置（緑）- 常に検出・表示 ===
+        List<AprilTagDetection> detections = vision.getAllDetections();
+        packet.put("AprilTag count", detections.size());
 
-            if (!detections.isEmpty()) {
-                AprilTagDetection det = detections.get(0);  // 最初の検出
-                packet.put("Tag ID", det.id);
-                packet.put("Tag range (in)", det.ftcPose.range);
-                packet.put("Tag x (in)", det.ftcPose.x);  // 横方向
-                packet.put("Tag y (in)", det.ftcPose.y);  // 前方向
-                packet.put("Tag yaw (deg)", det.ftcPose.yaw);
-                packet.put("Tag bearing (deg)", det.ftcPose.bearing);
+        if (!detections.isEmpty()) {
+            AprilTagDetection det = detections.get(0);  // 最初の検出
+            packet.put("Tag ID", det.id);
+            packet.put("Tag range (cm)", det.ftcPose.range / RobotConfig.CM_TO_INCH);
 
-                Pose2d aprilTagPose = vision.getBestPoseEstimate();
-                if (aprilTagPose != null) {
-                    canvas.setStroke("#4CAF50");  // Green
-                    canvas.setStrokeWidth(2);
-                    Drawing.drawRobot(canvas, aprilTagPose);
-                    lastAprilTagPose = aprilTagPose;
+            Pose2d aprilTagPose = vision.getBestPoseEstimate();
+            if (aprilTagPose != null) {
+                canvas.setStroke("#4CAF50");  // Green
+                canvas.setStrokeWidth(2);
+                Drawing.drawRobot(canvas, aprilTagPose);
+                lastAprilTagPose = aprilTagPose;
 
-                    // 両者の差を計算
-                    double dx = aprilTagPose.position.x - odometryPose.position.x;
-                    double dy = aprilTagPose.position.y - odometryPose.position.y;
-                    double dist = Math.sqrt(dx * dx + dy * dy);
+                // 両者の差を計算
+                double dx = aprilTagPose.position.x - odometryPose.position.x;
+                double dy = aprilTagPose.position.y - odometryPose.position.y;
+                double distCm = Math.sqrt(dx * dx + dy * dy) / RobotConfig.CM_TO_INCH;
 
-                    packet.put("Calc Robot x", aprilTagPose.position.x);
-                    packet.put("Calc Robot y", aprilTagPose.position.y);
-                    packet.put("Calc heading (deg)", Math.toDegrees(aprilTagPose.heading.toDouble()));
-                    packet.put("Difference (in)", dist);
-                }
-            } else if (lastAprilTagPose != null) {
-                // AprilTagが見えない時は最後の位置を薄く表示
-                canvas.setStroke("#A5D6A7");  // Light green
-                canvas.setStrokeWidth(1);
-                Drawing.drawRobot(canvas, lastAprilTagPose);
-                packet.put("AprilTag", "Not visible (showing last)");
-            } else {
-                packet.put("AprilTag", "Not visible");
+                packet.put("AprilTag x (cm)", aprilTagPose.position.x / RobotConfig.CM_TO_INCH);
+                packet.put("AprilTag y (cm)", aprilTagPose.position.y / RobotConfig.CM_TO_INCH);
+                packet.put("AprilTag heading (deg)", Math.toDegrees(aprilTagPose.heading.toDouble()));
+                packet.put("Difference (cm)", distCm);
             }
-        } else {
-            packet.put("AprilTag", "Disabled");
+        } else if (lastAprilTagPose != null) {
+            // AprilTagが見えない時は最後の位置を薄く表示
+            canvas.setStroke("#A5D6A7");  // Light green
+            canvas.setStrokeWidth(1);
+            Drawing.drawRobot(canvas, lastAprilTagPose);
         }
 
         // Run actions and remove completed ones
@@ -201,50 +220,38 @@ public class Robot {
      * ロボットの状態でtelemetryを更新する。
      */
     private void updateTelemetry() {
-        // DeadWheel (Odometry)
+        // Odometry position (Blue on Dashboard)
         Pose2d odometryPose = drive.getPose();
-        telemetry.addLine("=== DeadWheel (Blue) ===");
-        telemetry.addData("  x", "%.2f in", odometryPose.position.x);
-        telemetry.addData("  y", "%.2f in", odometryPose.position.y);
-        telemetry.addData("  heading", "%.1f°", Math.toDegrees(odometryPose.heading.toDouble()));
+        double odoCm_x = odometryPose.position.x / RobotConfig.CM_TO_INCH;
+        double odoCm_y = odometryPose.position.y / RobotConfig.CM_TO_INCH;
+        double odoHeading = Math.toDegrees(odometryPose.heading.toDouble());
 
-        // AprilTag
-        if (aprilTagEnabled) {
-            List<AprilTagDetection> detections = vision.getAllDetections();
-            telemetry.addLine("=== AprilTag Raw Data ===");
-            telemetry.addData("  Count", detections.size());
+        telemetry.addLine("--- Odometry (Blue) ---");
+        telemetry.addData("Position", "(%.0f, %.0f) cm, %.0f°", odoCm_x, odoCm_y, odoHeading);
 
-            if (!detections.isEmpty()) {
-                AprilTagDetection det = detections.get(0);
-                telemetry.addData("  Tag ID", det.id);
-                telemetry.addData("  range", "%.1f in", det.ftcPose.range);
-                telemetry.addData("  x (right+)", "%.1f in", det.ftcPose.x);
-                telemetry.addData("  y (forward+)", "%.1f in", det.ftcPose.y);
-                telemetry.addData("  yaw", "%.1f°", det.ftcPose.yaw);
-                telemetry.addData("  bearing", "%.1f°", det.ftcPose.bearing);
+        // AprilTag position (Green on Dashboard)
+        List<AprilTagDetection> detections = vision.getAllDetections();
+        if (!detections.isEmpty()) {
+            AprilTagDetection det = detections.get(0);
+            Pose2d aprilTagPose = vision.getBestPoseEstimate();
 
-                Pose2d aprilTagPose = vision.getBestPoseEstimate();
-                if (aprilTagPose != null) {
-                    telemetry.addLine("=== Calculated Robot Pose ===");
-                    telemetry.addData("  x", "%.2f in", aprilTagPose.position.x);
-                    telemetry.addData("  y", "%.2f in", aprilTagPose.position.y);
-                    telemetry.addData("  heading", "%.1f°", Math.toDegrees(aprilTagPose.heading.toDouble()));
+            telemetry.addLine("--- AprilTag (Green) ---");
+            telemetry.addData("Tag", "ID %d, %.0f cm", det.id, det.ftcPose.range / RobotConfig.CM_TO_INCH);
 
-                    // 差分
-                    double dx = aprilTagPose.position.x - odometryPose.position.x;
-                    double dy = aprilTagPose.position.y - odometryPose.position.y;
-                    double dist = Math.sqrt(dx * dx + dy * dy);
-                    telemetry.addLine("=== Difference ===");
-                    telemetry.addData("  Δx", "%.2f in", dx);
-                    telemetry.addData("  Δy", "%.2f in", dy);
-                    telemetry.addData("  Distance", "%.2f in", dist);
-                }
-            } else {
-                telemetry.addData("  Status", "Not visible");
+            if (aprilTagPose != null) {
+                double tagCm_x = aprilTagPose.position.x / RobotConfig.CM_TO_INCH;
+                double tagCm_y = aprilTagPose.position.y / RobotConfig.CM_TO_INCH;
+                double tagHeading = Math.toDegrees(aprilTagPose.heading.toDouble());
+                telemetry.addData("Position", "(%.0f, %.0f) cm, %.0f°", tagCm_x, tagCm_y, tagHeading);
+
+                // Difference
+                double dx = aprilTagPose.position.x - odometryPose.position.x;
+                double dy = aprilTagPose.position.y - odometryPose.position.y;
+                double distCm = Math.sqrt(dx * dx + dy * dy) / RobotConfig.CM_TO_INCH;
+                telemetry.addData("Diff", "%.1f cm (Y to correct)", distCm);
             }
         } else {
-            telemetry.addLine("=== AprilTag ===");
-            telemetry.addData("  Status", "Disabled (Y to enable)");
+            telemetry.addData("AprilTag", "Not visible");
         }
     }
 

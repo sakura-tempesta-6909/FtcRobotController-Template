@@ -9,18 +9,32 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 /**
  * Main Autonomous OpMode using Road Runner.
  * Road Runnerを使用するメインAutonomous OpMode。
+ *
+ * 座標系 (FTC DECODE):
+ * - X軸: Goal側 (X-) ↔ Audience Wall側 (X+)
+ * - Y軸: Red Wall (Y-) ↔ Blue Wall (Y+)
+ * - Heading: 0° = X+方向, 90° = Y+方向
  */
 @Autonomous(name = "Main Auto", group = "Main")
 public class MainAuto extends OpMode {
 
-    // Starting pose（MeepMeepと同じ座標系）
-    // x: 左右、y: 前後、heading: 0=右、-90°=手前向き
-    private static final Pose2d START_POSE = new Pose2d(0, -65, Math.toRadians(-90));
+    // Starting pose (cm単位で設定、インチに変換)
+    // Red Alliance側スタート: X=152cm, Y=33cm, Heading=145° (Blue方向)
+    private static final double START_X_CM = 152.0;
+    private static final double START_Y_CM = 33.0;
+    private static final double START_HEADING_DEG = 145.0;
+
+    private static final Pose2d START_POSE = new Pose2d(
+            START_X_CM * RobotConfig.CM_TO_INCH,
+            START_Y_CM * RobotConfig.CM_TO_INCH,
+            Math.toRadians(START_HEADING_DEG)
+    );
 
     private Robot robot;
     private boolean autoStarted = false;

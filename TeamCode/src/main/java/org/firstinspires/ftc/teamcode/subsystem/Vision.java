@@ -29,11 +29,46 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
- * Vision subsystem for AprilTag detection and localization.
- * Supports camera preview on FTC Dashboard and Driver Hub.
+ * Vision subsystem for AprilTag detection and robot localization.
+ * AprilTag検出とロボット自己位置推定のためのVisionサブシステム。
  *
- * AprilTag検出と自己位置推定のためのVisionサブシステム。
- * FTCダッシュボードとDriver Hubへのカメラプレビュー表示をサポート。
+ * ============================================
+ * 座標系 (FTC DECODE 2024-2025)
+ * ============================================
+ * - X軸: Goal側 (X-) ↔ Audience Wall側 (X+)
+ * - Y軸: Red Wall (Y-) ↔ Blue Wall (Y+)
+ * - Heading: 0° = X+方向, 90° = Y+方向, 180° = X-方向
+ *
+ * ============================================
+ * AprilTag位置推定の計算フロー
+ * ============================================
+ * 1. AprilTagを検出し、ftcPose (x, y, yaw) を取得
+ *    - ftcPose.x: タグがカメラの右方向にどれだけずれているか (右が正)
+ *    - ftcPose.y: タグがカメラの前方向にどれだけ離れているか (前が正)
+ *    - ftcPose.yaw: タグがカメラから見てどれだけ回転しているか (右回転が正)
+ *
+ * 2. カメラのフィールド上の向きを計算
+ *    cameraFieldHeading = tagFieldHeading + 180° - yaw
+ *    - タグが向いている方向の反対側からカメラが見ている
+ *    - yawでカメラの実際の向きを補正
+ *
+ * 3. タグの相対位置をフィールド座標系に変換
+ *    - カメラ座標系 (右がX+, 前がY+) → フィールド座標系
+ *    - 回転行列を適用
+ *
+ * 4. カメラのフィールド位置を計算
+ *    cameraFieldPos = tagFieldPos - tagRelativePos
+ *
+ * 5. ロボット中心の位置を計算
+ *    - カメラオフセット (RobotConfig.Vision) を適用
+ *    - robotPos = cameraPos - cameraOffset (フィールド座標系で)
+ *
+ * ============================================
+ * 設定値 (RobotConfig.Vision)
+ * ============================================
+ * - CAMERA_X_OFFSET_CM: カメラのロボット中心からの右方向オフセット (左が負)
+ * - CAMERA_Y_OFFSET_CM: カメラのロボット中心からの前方向オフセット
+ * - CAMERA_HEADING_OFFSET: カメラの向きのロボット向きからのオフセット (左向きが負)
  */
 public class Vision implements CameraStreamSource {
     private final AprilTagProcessor aprilTag;
@@ -205,54 +240,59 @@ public class Vision implements CameraStreamSource {
     /**
      * Calculate robot pose from AprilTag detection.
      * AprilTag検出からロボットの位置を計算する。
-     * カメラオフセット（RobotConfig.Vision）を考慮。
      *
-     * @param detection    The AprilTag detection
-     * @param tagFieldPose The tag's position on the field
-     * @return Estimated robot pose
+     * 計算の流れ:
+     * 1. カメラのフィールド上の向きを計算 (タグの向き + 180° - yaw)
+     * 2. タグの相対位置をフィールド座標系に変換
+     * 3. カメラのフィールド位置を計算
+     * 4. カメラオフセットを適用してロボット中心位置を計算
+     *
+     * @param detection    The AprilTag detection (ftcPoseが必要)
+     * @param tagFieldPose The tag's position on the field (inches, radians)
+     * @return Estimated robot pose (inches, radians), or null if invalid input
      */
     public Pose2d calculateRobotPose(AprilTagDetection detection, Pose2d tagFieldPose) {
         if (detection == null || detection.ftcPose == null || tagFieldPose == null) {
             return null;
         }
 
-        // タグの向き（フィールド座標系）
+        // ========== Step 1: カメラのフィールド上の向きを計算 ==========
+        // タグがtagHeadingを向いている → カメラはその反対側(+180°)から見ている
+        // yaw: タグがカメラから見て右に回転している角度 (正 = 右回転)
+        // → カメラはタグ正面から左にずれている → カメラの向きは -yaw 補正
         double tagHeading = tagFieldPose.heading.toDouble();
+        double cameraFieldHeading = tagHeading + Math.PI - Math.toRadians(detection.ftcPose.yaw);
 
-        // Camera offset from RobotConfig (Dashboardから動的に取得)
-        double cameraXOffset = RobotConfig.Vision.getCameraXOffset();
-        double cameraYOffset = RobotConfig.Vision.getCameraYOffset();
-        double cameraHeadingOffset = Math.toRadians(RobotConfig.Vision.CAMERA_HEADING_OFFSET);
+        // ========== Step 2: タグの相対位置をフィールド座標系に変換 ==========
+        // カメラ座標系: X+ = 右, Y+ = 前
+        // フィールド座標系に変換するため、カメラの向きで回転
+        double camToTagX = detection.ftcPose.x;  // タグはカメラの右方向に (負なら左)
+        double camToTagY = detection.ftcPose.y;  // タグはカメラの前方向に
 
-        // カメラのフィールド上の向きを計算
-        // タグがtagHeadingを向いている時、カメラはその反対側(+π)から見ている
-        // yawはカメラから見たタグの回転角度（正 = タグが反時計回りに見える = カメラが時計回りにずれている）
-        double cameraFieldHeading = tagHeading + Math.PI + Math.toRadians(detection.ftcPose.yaw);
-
-        // カメラから見たタグの位置 (ftcPose.x = 右方向, ftcPose.y = 前方向)
-        double camToTagX = detection.ftcPose.x;  // カメラの右方向
-        double camToTagY = detection.ftcPose.y;  // カメラの前方向
-
-        // カメラ座標系からフィールド座標系への変換
-        // カメラの前方向(+Y)はcameraFieldHeading、右方向(+X)はcameraFieldHeading - 90°
-        // camToTag_field = rotate(camToTag_camera, cameraFieldHeading)
-        // tagToCamera_field = -camToTag_field
         double sinH = Math.sin(cameraFieldHeading);
         double cosH = Math.cos(cameraFieldHeading);
+
+        // カメラ→タグのベクトルをフィールド座標系に変換し、符号反転でタグ→カメラに
+        // カメラの前方向(Y+) → フィールドの (cosH, sinH) 方向
+        // カメラの右方向(X+) → フィールドの (sinH, -cosH) 方向
         double tagToCamera_fieldX = -(camToTagX * sinH + camToTagY * cosH);
         double tagToCamera_fieldY = -(-camToTagX * cosH + camToTagY * sinH);
 
-        // カメラのフィールド位置
+        // ========== Step 3: カメラのフィールド位置を計算 ==========
         double cameraX = tagFieldPose.position.x + tagToCamera_fieldX;
         double cameraY = tagFieldPose.position.y + tagToCamera_fieldY;
 
-        // ロボットの向き（カメラの向き - カメラオフセット）
+        // ========== Step 4: ロボット中心位置を計算 ==========
+        // カメラオフセット (RobotConfig.Vision から取得)
+        double cameraXOffset = RobotConfig.Vision.getCameraXOffset();  // 右が正 (inches)
+        double cameraYOffset = RobotConfig.Vision.getCameraYOffset();  // 前が正 (inches)
+        double cameraHeadingOffset = Math.toRadians(RobotConfig.Vision.CAMERA_HEADING_OFFSET);
+
+        // ロボットの向き = カメラの向き - カメラ取り付け角度オフセット
         double robotHeading = cameraFieldHeading - cameraHeadingOffset;
 
-        // カメラ位置からロボット中心位置を計算
-        // カメラはロボット中心から (cameraXOffset = 右, cameraYOffset = 前) の位置にある
-        // ロボット座標系での右方向 = robotHeading - 90° = sin(robotHeading) in field X
-        // ロボット座標系での前方向 = robotHeading = cos(robotHeading) in field X
+        // カメラはロボット中心から (Xoffset, Yoffset) の位置にある (ロボット座標系)
+        // これをフィールド座標系に変換してカメラ位置から引く
         double sinR = Math.sin(robotHeading);
         double cosR = Math.cos(robotHeading);
         double robotX = cameraX - (cameraXOffset * sinR + cameraYOffset * cosR);
