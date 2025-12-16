@@ -3,25 +3,23 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.Pose2d;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
-import org.firstinspires.ftc.teamcode.lib.roadrunner.Drawing;
+import org.firstinspires.ftc.teamcode.lib.Drawing;
 import org.firstinspires.ftc.teamcode.subsystem.Drive;
 import org.firstinspires.ftc.teamcode.subsystem.Vision;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Robot class that manages all subsystems and actions.
+ * Robot class that manages all subsystems.
  * Unified entry point for both TeleOp and Autonomous.
  *
- * 全サブシステムとアクションを管理するRobotクラス。
+ * 全サブシステムを管理するRobotクラス。
  * TeleOpとAutonomous両方の統一エントリーポイント。
  */
 public class Robot {
@@ -33,20 +31,23 @@ public class Robot {
     // public final Lift lift;
     // public final Intake intake;
 
-    // Action management
-    private final List<Action> runningActions = new ArrayList<>();
-
     // FTC Dashboard for telemetry
     private final FtcDashboard dashboard = FtcDashboard.getInstance();
 
     // Telemetry (optional)
     private Telemetry telemetry;
 
+    // AprilTag位置の履歴（軌跡表示用）
+    private Pose lastAprilTagPose = null;
+
+    // 位置補正の重み (0.0 = 補正なし, 1.0 = 完全にAprilTagの値を使用)
+    private static final double CORRECTION_ALPHA = 0.5;
+
     /**
      * Initialize robot with all subsystems at specified pose.
      * 指定位置で全サブシステムを初期化する。
      */
-    public Robot(HardwareMap hardwareMap, Pose2d initialPose) {
+    public Robot(HardwareMap hardwareMap, Pose initialPose) {
         // Initialize subsystems
         drive = new Drive(hardwareMap, initialPose);
         vision = new Vision(hardwareMap);
@@ -68,43 +69,28 @@ public class Robot {
     }
 
     // ===================
-    // Action Management
+    // Path Following
     // ===================
 
     /**
-     * Add an action to the running queue.
-     * アクションを実行キューに追加する。
-     */
-    public void runAction(Action action) {
-        runningActions.add(action);
-    }
-
-    /**
-     * Check if any actions are currently running.
-     * アクションが実行中かどうかを確認する。
+     * Check if a path is currently being followed.
+     * パスが追従中かどうかを確認する。
      */
     public boolean isBusy() {
-        return !runningActions.isEmpty();
+        return drive.isBusy();
     }
 
     /**
-     * Cancel all running actions.
-     * 全ての実行中アクションをキャンセルする。
+     * Cancel current path following.
+     * 現在のパス追従をキャンセルする。
      */
     public void cancelAllActions() {
-        runningActions.clear();
         drive.stop();
     }
 
     // ===================
-    // Main Update Loop
+    // AprilTag Pose Correction
     // ===================
-
-    // AprilTag位置の履歴（軌跡表示用）
-    private Pose2d lastAprilTagPose = null;
-
-    // 位置補正の重み (0.0 = 補正なし, 1.0 = 完全にAprilTagの値を使用)
-    private static final double CORRECTION_ALPHA = 0.5;
 
     /**
      * Correct odometry pose using AprilTag detection.
@@ -113,18 +99,18 @@ public class Robot {
      * @return true if correction was applied, false if no AprilTag visible
      */
     public boolean correctPoseWithAprilTag() {
-        Pose2d aprilTagPose = vision.getBestPoseEstimate();
+        Pose aprilTagPose = vision.getBestPoseEstimate();
         if (aprilTagPose == null) {
             return false;
         }
 
-        Pose2d currentPose = drive.getPose();
+        Pose currentPose = drive.getPose();
 
         // 重み付き平均で補正 (急激な変化を防ぐ)
-        Pose2d correctedPose = new Pose2d(
-                currentPose.position.x * (1 - CORRECTION_ALPHA) + aprilTagPose.position.x * CORRECTION_ALPHA,
-                currentPose.position.y * (1 - CORRECTION_ALPHA) + aprilTagPose.position.y * CORRECTION_ALPHA,
-                currentPose.heading.toDouble() * (1 - CORRECTION_ALPHA) + aprilTagPose.heading.toDouble() * CORRECTION_ALPHA
+        Pose correctedPose = new Pose(
+                currentPose.getX() * (1 - CORRECTION_ALPHA) + aprilTagPose.getX() * CORRECTION_ALPHA,
+                currentPose.getY() * (1 - CORRECTION_ALPHA) + aprilTagPose.getY() * CORRECTION_ALPHA,
+                currentPose.getHeading() * (1 - CORRECTION_ALPHA) + aprilTagPose.getHeading() * CORRECTION_ALPHA
         );
 
         drive.setPose(correctedPose);
@@ -138,7 +124,7 @@ public class Robot {
      * @return true if pose was set, false if no AprilTag visible
      */
     public boolean resetPoseToAprilTag() {
-        Pose2d aprilTagPose = vision.getBestPoseEstimate();
+        Pose aprilTagPose = vision.getBestPoseEstimate();
         if (aprilTagPose == null) {
             return false;
         }
@@ -146,29 +132,32 @@ public class Robot {
         return true;
     }
 
+    // ===================
+    // Main Update Loop
+    // ===================
+
     /**
      * Update robot state. Call this every loop.
      * ロボットの状態を更新する。毎ループ呼び出すこと。
      */
     public void update() {
-        // Update localization (DeadWheel only - AprilTag does NOT affect this)
-        // 自己位置推定を更新（デッドホイールのみ - AprilTagは影響しない）
-        drive.updateLocalization();
+        // Update drive (localization + path following)
+        drive.update();
 
         // Create telemetry packet for FTC Dashboard
         TelemetryPacket packet = new TelemetryPacket();
         Canvas canvas = packet.fieldOverlay();
 
-        // === DeadWheel位置（青） ===
-        Pose2d odometryPose = drive.getPose();
+        // === Odometry位置（青） ===
+        Pose odometryPose = drive.getPose();
         canvas.setStroke("#3F51B5");  // Blue
-        canvas.setStrokeWidth(2);
+        canvas.setStrokeWidth(1);
         Drawing.drawRobot(canvas, odometryPose);
 
         // Add odometry pose data to packet (always)
-        packet.put("Odometry x", odometryPose.position.x);
-        packet.put("Odometry y", odometryPose.position.y);
-        packet.put("heading (deg)", Math.toDegrees(odometryPose.heading.toDouble()));
+        packet.put("Odometry x", odometryPose.getX());
+        packet.put("Odometry y", odometryPose.getY());
+        packet.put("heading (deg)", Math.toDegrees(odometryPose.getHeading()));
 
         // === AprilTag位置（緑）- 常に検出・表示 ===
         List<AprilTagDetection> detections = vision.getAllDetections();
@@ -179,21 +168,21 @@ public class Robot {
             packet.put("Tag ID", det.id);
             packet.put("Tag range (cm)", det.ftcPose.range / RobotConfig.CM_TO_INCH);
 
-            Pose2d aprilTagPose = vision.getBestPoseEstimate();
+            Pose aprilTagPose = vision.getBestPoseEstimate();
             if (aprilTagPose != null) {
                 canvas.setStroke("#4CAF50");  // Green
-                canvas.setStrokeWidth(2);
+                canvas.setStrokeWidth(1);
                 Drawing.drawRobot(canvas, aprilTagPose);
                 lastAprilTagPose = aprilTagPose;
 
                 // 両者の差を計算
-                double dx = aprilTagPose.position.x - odometryPose.position.x;
-                double dy = aprilTagPose.position.y - odometryPose.position.y;
+                double dx = aprilTagPose.getX() - odometryPose.getX();
+                double dy = aprilTagPose.getY() - odometryPose.getY();
                 double distCm = Math.sqrt(dx * dx + dy * dy) / RobotConfig.CM_TO_INCH;
 
-                packet.put("AprilTag x (cm)", aprilTagPose.position.x / RobotConfig.CM_TO_INCH);
-                packet.put("AprilTag y (cm)", aprilTagPose.position.y / RobotConfig.CM_TO_INCH);
-                packet.put("AprilTag heading (deg)", Math.toDegrees(aprilTagPose.heading.toDouble()));
+                packet.put("AprilTag x (cm)", aprilTagPose.getX() / RobotConfig.CM_TO_INCH);
+                packet.put("AprilTag y (cm)", aprilTagPose.getY() / RobotConfig.CM_TO_INCH);
+                packet.put("AprilTag heading (deg)", Math.toDegrees(aprilTagPose.getHeading()));
                 packet.put("Difference (cm)", distCm);
             }
         } else if (lastAprilTagPose != null) {
@@ -202,9 +191,6 @@ public class Robot {
             canvas.setStrokeWidth(1);
             Drawing.drawRobot(canvas, lastAprilTagPose);
         }
-
-        // Run actions and remove completed ones
-        runningActions.removeIf(action -> !action.run(packet));
 
         // Send packet to dashboard
         dashboard.sendTelemetryPacket(packet);
@@ -221,10 +207,10 @@ public class Robot {
      */
     private void updateTelemetry() {
         // Odometry position (Blue on Dashboard)
-        Pose2d odometryPose = drive.getPose();
-        double odoCm_x = odometryPose.position.x / RobotConfig.CM_TO_INCH;
-        double odoCm_y = odometryPose.position.y / RobotConfig.CM_TO_INCH;
-        double odoHeading = Math.toDegrees(odometryPose.heading.toDouble());
+        Pose odometryPose = drive.getPose();
+        double odoCm_x = odometryPose.getX() / RobotConfig.CM_TO_INCH;
+        double odoCm_y = odometryPose.getY() / RobotConfig.CM_TO_INCH;
+        double odoHeading = Math.toDegrees(odometryPose.getHeading());
 
         telemetry.addLine("--- Odometry (Blue) ---");
         telemetry.addData("Position", "(%.0f, %.0f) cm, %.0f°", odoCm_x, odoCm_y, odoHeading);
@@ -233,20 +219,20 @@ public class Robot {
         List<AprilTagDetection> detections = vision.getAllDetections();
         if (!detections.isEmpty()) {
             AprilTagDetection det = detections.get(0);
-            Pose2d aprilTagPose = vision.getBestPoseEstimate();
+            Pose aprilTagPose = vision.getBestPoseEstimate();
 
             telemetry.addLine("--- AprilTag (Green) ---");
             telemetry.addData("Tag", "ID %d, %.0f cm", det.id, det.ftcPose.range / RobotConfig.CM_TO_INCH);
 
             if (aprilTagPose != null) {
-                double tagCm_x = aprilTagPose.position.x / RobotConfig.CM_TO_INCH;
-                double tagCm_y = aprilTagPose.position.y / RobotConfig.CM_TO_INCH;
-                double tagHeading = Math.toDegrees(aprilTagPose.heading.toDouble());
+                double tagCm_x = aprilTagPose.getX() / RobotConfig.CM_TO_INCH;
+                double tagCm_y = aprilTagPose.getY() / RobotConfig.CM_TO_INCH;
+                double tagHeading = Math.toDegrees(aprilTagPose.getHeading());
                 telemetry.addData("Position", "(%.0f, %.0f) cm, %.0f°", tagCm_x, tagCm_y, tagHeading);
 
                 // Difference
-                double dx = aprilTagPose.position.x - odometryPose.position.x;
-                double dy = aprilTagPose.position.y - odometryPose.position.y;
+                double dx = aprilTagPose.getX() - odometryPose.getX();
+                double dy = aprilTagPose.getY() - odometryPose.getY();
                 double distCm = Math.sqrt(dx * dx + dy * dy) / RobotConfig.CM_TO_INCH;
                 telemetry.addData("Diff", "%.1f cm (Y to correct)", distCm);
             }

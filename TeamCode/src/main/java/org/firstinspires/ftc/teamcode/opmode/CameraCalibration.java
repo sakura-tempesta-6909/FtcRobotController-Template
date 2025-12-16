@@ -5,12 +5,12 @@ import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Pose2d;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
-import org.firstinspires.ftc.teamcode.lib.roadrunner.Drawing;
+import org.firstinspires.ftc.teamcode.lib.Drawing;
 import org.firstinspires.ftc.teamcode.subsystem.Vision;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
@@ -68,11 +68,11 @@ public class CameraCalibration extends OpMode {
         lastX = gamepad1.x;
 
         if (gamepad1.a && !lastA) {
-            Pose2d calculated = vision.getBestPoseEstimate();
+            Pose calculated = vision.getBestPoseEstimate();
             if (calculated != null) {
-                KNOWN_ROBOT_X_CM = calculated.position.x / RobotConfig.CM_TO_INCH;
-                KNOWN_ROBOT_Y_CM = calculated.position.y / RobotConfig.CM_TO_INCH;
-                KNOWN_ROBOT_HEADING_DEG = Math.toDegrees(calculated.heading.toDouble());
+                KNOWN_ROBOT_X_CM = calculated.getX() / RobotConfig.CM_TO_INCH;
+                KNOWN_ROBOT_Y_CM = calculated.getY() / RobotConfig.CM_TO_INCH;
+                KNOWN_ROBOT_HEADING_DEG = Math.toDegrees(calculated.getHeading());
             }
         }
         lastA = gamepad1.a;
@@ -82,7 +82,7 @@ public class CameraCalibration extends OpMode {
         Canvas canvas = packet.fieldOverlay();
 
         // 既知の位置を青で表示
-        Pose2d knownPose = new Pose2d(
+        Pose knownPose = new Pose(
                 KNOWN_ROBOT_X_CM * RobotConfig.CM_TO_INCH,
                 KNOWN_ROBOT_Y_CM * RobotConfig.CM_TO_INCH,
                 Math.toRadians(KNOWN_ROBOT_HEADING_DEG)
@@ -109,7 +109,7 @@ public class CameraCalibration extends OpMode {
             telemetry.addLine("--- No AprilTag Detected ---");
         } else {
             AprilTagDetection det = detections.get(0);
-            Pose2d tagFieldPose = vision.getTagFieldPose(det.id);
+            Pose tagFieldPose = vision.getTagFieldPose(det.id);
 
             // 検出情報
             telemetry.addLine("--- Detection (Tag " + det.id + ") ---");
@@ -117,7 +117,7 @@ public class CameraCalibration extends OpMode {
             telemetry.addData("Yaw", "%.1f deg", det.ftcPose.yaw);
 
             // Visionクラスで計算
-            Pose2d calculatedPose = vision.calculateRobotPose(det, tagFieldPose);
+            Pose calculatedPose = vision.calculateRobotPose(det, tagFieldPose);
 
             if (calculatedPose != null) {
                 // 計算された位置を緑で表示
@@ -125,9 +125,9 @@ public class CameraCalibration extends OpMode {
                 canvas.setStrokeWidth(2);
                 Drawing.drawRobot(canvas, calculatedPose);
 
-                double calcXCm = calculatedPose.position.x / RobotConfig.CM_TO_INCH;
-                double calcYCm = calculatedPose.position.y / RobotConfig.CM_TO_INCH;
-                double calcHeadingDeg = Math.toDegrees(calculatedPose.heading.toDouble());
+                double calcXCm = calculatedPose.getX() / RobotConfig.CM_TO_INCH;
+                double calcYCm = calculatedPose.getY() / RobotConfig.CM_TO_INCH;
+                double calcHeadingDeg = Math.toDegrees(calculatedPose.getHeading());
 
                 telemetry.addLine("--- Calculated Position (Green) ---");
                 telemetry.addData("Position", "(%.1f, %.1f) cm", calcXCm, calcYCm);

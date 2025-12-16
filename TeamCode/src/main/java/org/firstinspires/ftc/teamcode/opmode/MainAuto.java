@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.Vector2d;
+import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -13,8 +11,8 @@ import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.robot.Robot;
 
 /**
- * Main Autonomous OpMode using Road Runner.
- * Road Runnerを使用するメインAutonomous OpMode。
+ * Main Autonomous OpMode using Pedro Pathing.
+ * Pedro Pathingを使用するメインAutonomous OpMode。
  *
  * 座標系 (FTC DECODE):
  * - X軸: Goal側 (X-) ↔ Audience Wall側 (X+)
@@ -30,14 +28,23 @@ public class MainAuto extends OpMode {
     private static final double START_Y_CM = 33.0;
     private static final double START_HEADING_DEG = 145.0;
 
-    private static final Pose2d START_POSE = new Pose2d(
+    private static final Pose START_POSE = new Pose(
             START_X_CM * RobotConfig.CM_TO_INCH,
             START_Y_CM * RobotConfig.CM_TO_INCH,
             Math.toRadians(START_HEADING_DEG)
     );
 
     private Robot robot;
-    private boolean autoStarted = false;
+    private PathChain autoPath;
+
+    // State machine for autonomous
+    private enum AutoState {
+        IDLE,
+        FOLLOWING_PATH,
+        CORRECTING_POSE,
+        COMPLETE
+    }
+    private AutoState currentState = AutoState.IDLE;
 
     /**
      * Called once when INIT is pressed.
@@ -48,8 +55,12 @@ public class MainAuto extends OpMode {
         robot = new Robot(hardwareMap, START_POSE);
         robot.setTelemetry(telemetry);
 
+        // Build autonomous path
+        autoPath = buildAutonomousPath();
+
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("Start Pose", START_POSE.toString());
+        telemetry.addData("Start Pose", "(%.0f, %.0f) cm, %.0f°",
+                START_X_CM, START_Y_CM, START_HEADING_DEG);
     }
 
     /**
@@ -68,10 +79,9 @@ public class MainAuto extends OpMode {
      */
     @Override
     public void start() {
-        // Build and start autonomous sequence
-        Action auto = buildAutonomous();
-        robot.runAction(auto);
-        autoStarted = true;
+        // Start following the path
+        robot.drive.followPath(autoPath, true);  // holdEnd = true
+        currentState = AutoState.FOLLOWING_PATH;
 
         telemetry.addData("Status", "Running");
     }
@@ -84,10 +94,30 @@ public class MainAuto extends OpMode {
     public void loop() {
         robot.update();
 
-        if (autoStarted && !robot.isBusy()) {
-            telemetry.addData("Status", "Complete");
+        // State machine
+        switch (currentState) {
+            case FOLLOWING_PATH:
+                if (!robot.isBusy()) {
+                    // Path complete, try to correct with AprilTag
+                    currentState = AutoState.CORRECTING_POSE;
+                }
+                break;
+
+            case CORRECTING_POSE:
+                // Try AprilTag correction
+                robot.correctPoseWithAprilTag();
+                currentState = AutoState.COMPLETE;
+                break;
+
+            case COMPLETE:
+                telemetry.addData("Status", "Complete");
+                break;
+
+            default:
+                break;
         }
 
+        telemetry.addData("State", currentState.toString());
         telemetry.update();
     }
 
@@ -101,72 +131,71 @@ public class MainAuto extends OpMode {
     }
 
     /**
-     * Build autonomous action sequence.
-     * Autonomousアクションシーケンスを構築する。
+     * Build autonomous path.
+     * Autonomousパスを構築する。
      */
-    private Action buildAutonomous() {
-        // MeepMeep座標系: START_POSE = (0, -65, -90°)
-        // ロボットはフィールド下部中央、フィールド中心方向を向いている
-        return new SequentialAction(
-                // Step 1: フィールド中心に向かって前進
-                robot.drive.actionBuilder(START_POSE)
-                        .lineToY(-40)
-                        .build(),
+    private PathChain buildAutonomousPath() {
+        // Example: Simple forward movement and turn
+        // 例: シンプルな前進と回転
 
-                // Step 2: 少し待機
-                new SleepAction(0.5),
-
-                // Step 3: 右にストレイフ
-                robot.drive.actionBuilder(new Pose2d(0, -40, Math.toRadians(-90)))
-                        .strafeTo(new Vector2d(24, -40))
-                        .build(),
-
-                // Step 4: AprilTagで位置補正（見える場合）
-                robot.drive.correctPoseWithTag(1),
-
-                // Step 5: 回転してスコアリング位置へ
-                robot.drive.actionBuilder(new Pose2d(24, -40, Math.toRadians(-90)))
-                        .turnTo(Math.toRadians(0))
-                        .lineToX(48)
-                        .build()
-
-                // 必要に応じてステップを追加:
-                // robot.lift.toHigh(),
-                // robot.intake.open(),
-                // new SleepAction(0.3),
+        // Target positions (in cm, converted to inches)
+        Pose waypoint1 = new Pose(
+                120 * RobotConfig.CM_TO_INCH,
+                33 * RobotConfig.CM_TO_INCH,
+                Math.toRadians(145)
         );
+
+        Pose waypoint2 = new Pose(
+                100 * RobotConfig.CM_TO_INCH,
+                50 * RobotConfig.CM_TO_INCH,
+                Math.toRadians(90)
+        );
+
+        return robot.drive.pathBuilder()
+                // Move to waypoint1 with linear heading interpolation
+                .addPath(new BezierLine(START_POSE, waypoint1))
+                .setLinearHeadingInterpolation(START_POSE.getHeading(), waypoint1.getHeading())
+
+                // Line to waypoint2 (use BezierLine for simple path)
+                .addPath(new BezierLine(waypoint1, waypoint2))
+                .setLinearHeadingInterpolation(waypoint1.getHeading(), waypoint2.getHeading())
+
+                .build();
     }
 
     /**
-     * Example: Build a more complex autonomous with parallel actions.
-     * 例: 並列アクションを使ったより複雑なAutonomous。
+     * Example: Build a more complex autonomous with multiple phases.
+     * 例: 複数フェーズを持つより複雑なAutonomous。
      */
     @SuppressWarnings("unused")
-    private Action buildComplexAutonomous() {
-        // MeepMeep座標系での複雑なAutonomous例
-        return new SequentialAction(
-                // 移動しながらスコアリング機構を準備
-                new ParallelAction(
-                        robot.drive.actionBuilder(START_POSE)
-                                .splineTo(new Vector2d(36, -24), Math.toRadians(45))
-                                .build()
-                        // robot.lift.toHigh()  // Liftを追加したらコメント解除
-                ),
+    private PathChain buildComplexAutonomousPath() {
+        // This is just an example of how to build paths
+        // 実際の座標はフィールドに合わせて調整
 
-                // AprilTagに合わせて精密なスコアリング
-                robot.drive.alignToTag(1, new Pose2d(15, 0, 0)),
-
-                // スコア
-                // robot.intake.open(),
-                new SleepAction(0.3),
-
-                // スタートエリアに戻る
-                new ParallelAction(
-                        robot.drive.actionBuilder(robot.drive.getPose())
-                                .lineToY(-60)
-                                .build()
-                        // robot.lift.toLow()  // Liftを追加したらコメント解除
-                )
+        Pose scoringPose = new Pose(
+                36 * RobotConfig.CM_TO_INCH,
+                24 * RobotConfig.CM_TO_INCH,
+                Math.toRadians(45)
         );
+
+        Pose parkPose = new Pose(
+                60 * RobotConfig.CM_TO_INCH,
+                60 * RobotConfig.CM_TO_INCH,
+                Math.toRadians(0)
+        );
+
+        // Control point for BezierCurve (heading is ignored for control points)
+        Pose controlPoint = new Pose(100 * RobotConfig.CM_TO_INCH, 40 * RobotConfig.CM_TO_INCH, 0);
+
+        return robot.drive.pathBuilder()
+                // Phase 1: Go to scoring position with curve
+                .addPath(new BezierCurve(START_POSE, controlPoint, scoringPose))
+                .setLinearHeadingInterpolation(START_POSE.getHeading(), scoringPose.getHeading())
+
+                // Phase 2: Go to park
+                .addPath(new BezierLine(scoringPose, parkPose))
+                .setLinearHeadingInterpolation(scoringPose.getHeading(), parkPose.getHeading())
+
+                .build();
     }
 }

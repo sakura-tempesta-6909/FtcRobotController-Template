@@ -1,38 +1,37 @@
 package org.firstinspires.ftc.teamcode.subsystem;
 
-import androidx.annotation.NonNull;
-
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.PoseVelocity2d;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.Vector2d;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathBuilder;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.lib.roadrunner.MecanumDrive;
+import org.firstinspires.ftc.teamcode.lib.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
- * Drive subsystem wrapping Road Runner's MecanumDrive.
- * Provides both TeleOp direct control and Autonomous trajectory following.
+ * Drive subsystem wrapping Pedro Pathing's Follower.
+ * Provides both TeleOp direct control and Autonomous path following.
  *
- * Road RunnerのMecanumDriveをラップするドライブサブシステム。
- * TeleOpの直接制御とAutonomousの軌道追従の両方を提供。
+ * Pedro PathingのFollowerをラップするドライブサブシステム。
+ * TeleOpの直接制御とAutonomousのパス追従の両方を提供。
  */
 public class Drive {
-    // Road Runner MecanumDrive
-    private final MecanumDrive mecanumDrive;
+    // Pedro Follower
+    private final Follower follower;
 
     // Vision (for AprilTag localization)
     private Vision vision;
 
     public Drive(HardwareMap hardwareMap) {
-        this(hardwareMap, new Pose2d(0, 0, 0));
+        this(hardwareMap, new Pose(0, 0, 0));
     }
 
-    public Drive(HardwareMap hardwareMap, Pose2d initialPose) {
-        mecanumDrive = new MecanumDrive(hardwareMap, initialPose);
+    public Drive(HardwareMap hardwareMap, Pose initialPose) {
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(initialPose);
     }
 
     /**
@@ -51,16 +50,16 @@ public class Drive {
      * Get current pose estimate.
      * 現在の位置推定を取得する。
      */
-    public Pose2d getPose() {
-        return mecanumDrive.localizer.getPose();
+    public Pose getPose() {
+        return follower.getPose();
     }
 
     /**
      * Set pose estimate.
      * 位置推定を設定する。
      */
-    public void setPose(Pose2d pose) {
-        mecanumDrive.localizer.setPose(pose);
+    public void setPose(Pose pose) {
+        follower.setPose(pose);
     }
 
     /**
@@ -68,35 +67,15 @@ public class Drive {
      * 現在の方位をラジアンで取得する。
      */
     public double getHeading() {
-        return getPose().heading.toDouble();
+        return follower.getPose().getHeading();
     }
 
     /**
-     * Update localization. Call this every loop.
-     * 自己位置推定を更新する。毎ループ呼び出すこと。
+     * Update localization and path following. Call this every loop.
+     * 自己位置推定とパス追従を更新する。毎ループ呼び出すこと。
      */
-    public void updateLocalization() {
-        mecanumDrive.updatePoseEstimate();
-
-        // AprilTag correction if vision is available
-        // デバッグ用: 一時的に無効化
-        // TODO: 問題解決後にコメントを外す
-        /*
-        if (vision != null) {
-            Pose2d visionPose = vision.getBestPoseEstimate();
-            if (visionPose != null) {
-                // Smooth correction (weighted average)
-                Pose2d currentPose = getPose();
-                double alpha = RobotConfig.Control.VISION_CORRECTION_ALPHA;
-                Pose2d correctedPose = new Pose2d(
-                        currentPose.position.x * (1 - alpha) + visionPose.position.x * alpha,
-                        currentPose.position.y * (1 - alpha) + visionPose.position.y * alpha,
-                        currentPose.heading.toDouble() * (1 - alpha) + visionPose.heading.toDouble() * alpha
-                );
-                setPose(correctedPose);
-            }
-        }
-        */
+    public void update() {
+        follower.update();
     }
 
     // ===================
@@ -104,37 +83,32 @@ public class Drive {
     // ===================
 
     /**
+     * Start TeleOp drive mode.
+     * TeleOpドライブモードを開始する。
+     */
+    public void startTeleOp() {
+        follower.startTeleopDrive();
+    }
+
+    /**
      * Drive with field-centric control.
      * フィールドセントリック制御でドライブする。
      *
-     * @param xSpeed   Strafe speed (-1 to 1, positive = right)
-     * @param ySpeed   Forward speed (-1 to 1, positive = forward)
-     * @param rotation Rotation speed (-1 to 1, positive = counter-clockwise)
+     * @param forward  Forward speed (-1 to 1, positive = forward)
+     * @param strafe   Strafe speed (-1 to 1, positive = left)
+     * @param turn     Rotation speed (-1 to 1, positive = counter-clockwise)
      */
-    public void drive(double xSpeed, double ySpeed, double rotation) {
-        double heading = getHeading();
-
-        // Convert field-centric input to robot-centric
-        // Road Runnerではheading=90°が前向き(+Y)なので、90°オフセットを適用
-        double adjustedHeading = heading - Math.PI / 2;
-        double rotX = xSpeed * Math.cos(adjustedHeading) - ySpeed * Math.sin(adjustedHeading);
-        double rotY = xSpeed * Math.sin(adjustedHeading) + ySpeed * Math.cos(adjustedHeading);
-
-        mecanumDrive.setDrivePowers(new PoseVelocity2d(
-                new Vector2d(rotY, -rotX),
-                -rotation
-        ));
+    public void drive(double forward, double strafe, double turn) {
+        // Pedro uses: forward, strafe, turn, fieldCentric
+        follower.setTeleOpDrive(forward, strafe, turn, true);
     }
 
     /**
      * Drive with robot-centric control.
      * ロボットセントリック制御でドライブする。
      */
-    public void driveRobotCentric(double xSpeed, double ySpeed, double rotation) {
-        mecanumDrive.setDrivePowers(new PoseVelocity2d(
-                new Vector2d(ySpeed, -xSpeed),
-                -rotation
-        ));
+    public void driveRobotCentric(double forward, double strafe, double turn) {
+        follower.setTeleOpDrive(forward, strafe, turn, false);
     }
 
     /**
@@ -142,130 +116,107 @@ public class Drive {
      * 全モーターを停止する。
      */
     public void stop() {
-        mecanumDrive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, 0), 0));
+        follower.setTeleOpDrive(0, 0, 0, true);
     }
 
     // ===================
-    // Autonomous: Trajectory Actions
+    // Autonomous: Path Following
     // ===================
 
     /**
-     * Get trajectory action builder starting from current pose.
-     * 現在位置からの軌道アクションビルダーを取得する。
+     * Check if a path is currently being followed.
+     * パスが現在追従中かどうかを確認する。
      */
-    public TrajectoryActionBuilder actionBuilder() {
-        return mecanumDrive.actionBuilder(getPose());
+    public boolean isBusy() {
+        return follower.isBusy();
     }
 
     /**
-     * Get trajectory action builder starting from specified pose.
-     * 指定位置からの軌道アクションビルダーを取得する。
+     * Follow a path.
+     * パスを追従する。
      */
-    public TrajectoryActionBuilder actionBuilder(Pose2d beginPose) {
-        return mecanumDrive.actionBuilder(beginPose);
+    public void followPath(Path path) {
+        follower.followPath(path);
+    }
+
+    /**
+     * Follow a path chain.
+     * パスチェーンを追従する。
+     */
+    public void followPath(PathChain pathChain) {
+        follower.followPath(pathChain);
+    }
+
+    /**
+     * Follow a path chain with hold end option.
+     * 終点保持オプション付きでパスチェーンを追従する。
+     */
+    public void followPath(PathChain pathChain, boolean holdEnd) {
+        follower.followPath(pathChain, holdEnd);
+    }
+
+    /**
+     * Get a path builder starting from current pose.
+     * 現在位置からのパスビルダーを取得する。
+     */
+    public PathBuilder pathBuilder() {
+        return follower.pathBuilder();
+    }
+
+    /**
+     * Create a simple line path from current pose to target.
+     * 現在位置からターゲットへの直線パスを作成する。
+     */
+    public Path lineTo(Pose target) {
+        Path path = new Path(new BezierLine(getPose(), target));
+        path.setLinearHeadingInterpolation(getPose().getHeading(), target.getHeading());
+        return path;
+    }
+
+    /**
+     * Create a simple line path with constant heading.
+     * 一定のヘディングで直線パスを作成する。
+     */
+    public Path lineToConstantHeading(Pose target) {
+        Path path = new Path(new BezierLine(getPose(), target));
+        path.setConstantHeadingInterpolation(getPose().getHeading());
+        return path;
     }
 
     // ===================
-    // AprilTag Actions
+    // AprilTag Integration
     // ===================
 
     /**
-     * Create action to correct pose using AprilTag.
-     * AprilTagを使用してposeを補正するアクションを作成する。
+     * Correct pose using AprilTag detection.
+     * AprilTag検出を使用してposeを補正する。
      *
      * @param tagId Tag ID to look for
-     * @return Action that corrects pose (completes immediately)
+     * @return true if correction was applied
      */
-    public Action correctPoseWithTag(int tagId) {
-        return new Action() {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (vision == null) return false;
+    public boolean correctPoseWithTag(int tagId) {
+        if (vision == null) return false;
 
-                Pose2d tagFieldPose = vision.getTagFieldPose(tagId);
-                if (tagFieldPose == null) return false;
+        Pose tagFieldPose = vision.getTagFieldPose(tagId);
+        if (tagFieldPose == null) return false;
 
-                AprilTagDetection detection = vision.getDetection(tagId);
-                if (detection == null) {
-                    packet.put("apriltag_status", "Tag " + tagId + " not found");
-                    return false;
-                }
+        AprilTagDetection detection = vision.getDetection(tagId);
+        if (detection == null) return false;
 
-                Pose2d robotPose = vision.calculateRobotPose(detection, tagFieldPose);
-                if (robotPose != null) {
-                    setPose(robotPose);
-                    packet.put("apriltag_status", "Pose corrected");
-                    packet.put("corrected_pose", robotPose.toString());
-                }
+        Pose robotPose = vision.calculateRobotPose(detection, tagFieldPose);
+        if (robotPose != null) {
+            setPose(robotPose);
+            return true;
+        }
 
-                return false; // Complete immediately
-            }
-        };
+        return false;
     }
 
     /**
-     * Create action to align to AprilTag using P control.
-     * P制御を使用してAprilTagに位置合わせするアクションを作成する。
-     *
-     * @param tagId        Tag ID to align to
-     * @param targetOffset Target offset from tag (x = forward, y = left)
-     * @return Action that aligns robot to tag
+     * Get underlying Follower (for advanced use).
+     * 内部のFollowerを取得する（上級者向け）。
      */
-    public Action alignToTag(int tagId, Pose2d targetOffset) {
-        return new Action() {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (vision == null) return false;
-
-                AprilTagDetection detection = vision.getDetection(tagId);
-                if (detection == null) {
-                    packet.put("align_status", "Tag not found");
-                    stop();
-                    return false;
-                }
-
-                // Current offset from tag
-                double xError = detection.ftcPose.y - targetOffset.position.x;  // forward
-                double yError = detection.ftcPose.x - targetOffset.position.y;  // strafe
-                double headingError = Math.toRadians(detection.ftcPose.yaw) - targetOffset.heading.toDouble();
-
-                packet.put("align_x_error", xError);
-                packet.put("align_y_error", yError);
-                packet.put("align_heading_error", Math.toDegrees(headingError));
-
-                // Check if aligned
-                if (Math.abs(xError) < 1 && Math.abs(yError) < 1 && Math.abs(headingError) < Math.toRadians(2)) {
-                    stop();
-                    packet.put("align_status", "Aligned");
-                    return false;
-                }
-
-                // P control
-                double kP = 0.05;
-                double kPHeading = 0.5;
-                double maxPower = 0.3;
-
-                double xPower = clip(-xError * kP, -maxPower, maxPower);
-                double yPower = clip(-yError * kP, -maxPower, maxPower);
-                double headingPower = clip(-headingError * kPHeading, -maxPower, maxPower);
-
-                driveRobotCentric(yPower, xPower, headingPower);
-                packet.put("align_status", "Aligning...");
-
-                return true;
-            }
-
-            private double clip(double value, double min, double max) {
-                return Math.max(min, Math.min(max, value));
-            }
-        };
-    }
-
-    /**
-     * Get underlying MecanumDrive (for advanced use).
-     * 内部のMecanumDriveを取得する（上級者向け）。
-     */
-    public MecanumDrive getMecanumDrive() {
-        return mecanumDrive;
+    public Follower getFollower() {
+        return follower;
     }
 }

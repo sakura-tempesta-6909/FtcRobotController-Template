@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
-import com.acmerobotics.roadrunner.Pose2d;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -41,7 +41,7 @@ public class MainTeleOp extends OpMode {
     private static final double START_Y_CM = 33.0;
     private static final double START_HEADING_DEG = 145.0;
 
-    private static final Pose2d START_POSE = new Pose2d(
+    private static final Pose START_POSE = new Pose(
             START_X_CM * RobotConfig.CM_TO_INCH,
             START_Y_CM * RobotConfig.CM_TO_INCH,
             Math.toRadians(START_HEADING_DEG)
@@ -67,6 +67,8 @@ public class MainTeleOp extends OpMode {
 
     @Override
     public void start() {
+        // Start TeleOp drive mode
+        robot.drive.startTeleOp();
         telemetry.addData("Status", "Running");
     }
 
@@ -83,12 +85,12 @@ public class MainTeleOp extends OpMode {
         // ===================
         // Drive Control
         // ===================
-        double xSpeed = Robot.applyDeadZone(gamepad1.left_stick_x);
-        double ySpeed = Robot.applyDeadZone(-gamepad1.left_stick_y);
-        double rotation = Robot.applyDeadZone(gamepad1.right_stick_x);
+        double forward = Robot.applyDeadZone(-gamepad1.left_stick_y);
+        double strafe = Robot.applyDeadZone(-gamepad1.left_stick_x);
+        double turn = Robot.applyDeadZone(-gamepad1.right_stick_x);
 
         if (!robot.isBusy()) {
-            robot.drive.drive(xSpeed, ySpeed, rotation);
+            robot.drive.drive(forward, strafe, turn);
         }
 
         // ===================

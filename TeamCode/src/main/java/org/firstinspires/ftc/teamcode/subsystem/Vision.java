@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystem;
 import android.graphics.Bitmap;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.roadrunner.Pose2d;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.function.Consumer;
@@ -19,7 +19,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.concurrent.TimeUnit;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +82,7 @@ public class Vision implements CameraStreamSource {
      * Get tag field pose dynamically (supports Dashboard updates).
      * タグのフィールド位置を動的に取得（Dashboard更新をサポート）
      */
-    private Pose2d getTagFieldPoseDynamic(int tagId) {
+    private Pose getTagFieldPoseDynamic(int tagId) {
         double[] pose = null;
         if (tagId == RobotConfig.AprilTag.BLUE_GOAL_ID) {
             pose = RobotConfig.AprilTag.getBlueGoal();
@@ -92,7 +91,7 @@ public class Vision implements CameraStreamSource {
         }
 
         if (pose != null && pose.length >= 3) {
-            return new Pose2d(pose[0], pose[1], Math.toRadians(pose[2]));
+            return new Pose(pose[0], pose[1], Math.toRadians(pose[2]));
         }
         return null;
     }
@@ -222,7 +221,7 @@ public class Vision implements CameraStreamSource {
      * Get field pose for a tag ID.
      * タグIDに対応するフィールド上の位置を取得する。
      */
-    public Pose2d getTagFieldPose(int tagId) {
+    public Pose getTagFieldPose(int tagId) {
         return getTagFieldPoseDynamic(tagId);
     }
 
@@ -230,8 +229,8 @@ public class Vision implements CameraStreamSource {
      * Get all configured tag field poses.
      * 設定された全てのタグのフィールド位置を取得する。
      */
-    public Map<Integer, Pose2d> getAllTagFieldPoses() {
-        Map<Integer, Pose2d> poses = new HashMap<>();
+    public Map<Integer, Pose> getAllTagFieldPoses() {
+        Map<Integer, Pose> poses = new HashMap<>();
         poses.put(RobotConfig.AprilTag.BLUE_GOAL_ID, getTagFieldPoseDynamic(RobotConfig.AprilTag.BLUE_GOAL_ID));
         poses.put(RobotConfig.AprilTag.RED_GOAL_ID, getTagFieldPoseDynamic(RobotConfig.AprilTag.RED_GOAL_ID));
         return poses;
@@ -251,7 +250,7 @@ public class Vision implements CameraStreamSource {
      * @param tagFieldPose The tag's position on the field (inches, radians)
      * @return Estimated robot pose (inches, radians), or null if invalid input
      */
-    public Pose2d calculateRobotPose(AprilTagDetection detection, Pose2d tagFieldPose) {
+    public Pose calculateRobotPose(AprilTagDetection detection, Pose tagFieldPose) {
         if (detection == null || detection.ftcPose == null || tagFieldPose == null) {
             return null;
         }
@@ -260,7 +259,7 @@ public class Vision implements CameraStreamSource {
         // タグがtagHeadingを向いている → カメラはその反対側(+180°)から見ている
         // yaw: タグがカメラから見て右に回転している角度 (正 = 右回転)
         // → カメラはタグ正面から左にずれている → カメラの向きは -yaw 補正
-        double tagHeading = tagFieldPose.heading.toDouble();
+        double tagHeading = tagFieldPose.getHeading();
         double cameraFieldHeading = tagHeading + Math.PI - Math.toRadians(detection.ftcPose.yaw);
 
         // ========== Step 2: タグの相対位置をフィールド座標系に変換 ==========
@@ -279,8 +278,8 @@ public class Vision implements CameraStreamSource {
         double tagToCamera_fieldY = -(-camToTagX * cosH + camToTagY * sinH);
 
         // ========== Step 3: カメラのフィールド位置を計算 ==========
-        double cameraX = tagFieldPose.position.x + tagToCamera_fieldX;
-        double cameraY = tagFieldPose.position.y + tagToCamera_fieldY;
+        double cameraX = tagFieldPose.getX() + tagToCamera_fieldX;
+        double cameraY = tagFieldPose.getY() + tagToCamera_fieldY;
 
         // ========== Step 4: ロボット中心位置を計算 ==========
         // カメラオフセット (RobotConfig.Vision から取得)
@@ -298,7 +297,7 @@ public class Vision implements CameraStreamSource {
         double robotX = cameraX - (cameraXOffset * sinR + cameraYOffset * cosR);
         double robotY = cameraY - (-cameraXOffset * cosR + cameraYOffset * sinR);
 
-        return new Pose2d(robotX, robotY, robotHeading);
+        return new Pose(robotX, robotY, robotHeading);
     }
 
     /**
@@ -307,14 +306,14 @@ public class Vision implements CameraStreamSource {
      *
      * @return Best pose estimate, or null if no tags visible
      */
-    public Pose2d getBestPoseEstimate() {
+    public Pose getBestPoseEstimate() {
         List<AprilTagDetection> detections = getAllDetections();
 
         AprilTagDetection best = null;
         double bestRange = Double.MAX_VALUE;
 
         for (AprilTagDetection det : detections) {
-            Pose2d tagPose = getTagFieldPoseDynamic(det.id);
+            Pose tagPose = getTagFieldPoseDynamic(det.id);
             if (tagPose != null && det.ftcPose.range < bestRange) {
                 best = det;
                 bestRange = det.ftcPose.range;
