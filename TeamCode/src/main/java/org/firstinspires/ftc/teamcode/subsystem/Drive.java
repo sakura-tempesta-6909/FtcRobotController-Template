@@ -10,8 +10,7 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.config.RobotConfig;
-import org.firstinspires.ftc.teamcode.lib.MecanumDrive;
+import org.firstinspires.ftc.teamcode.lib.roadrunner.MecanumDrive;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 /**
