@@ -31,10 +31,12 @@ public class Constants {
             .strafeEncoder_HardwareMapName(RobotConfig.DriveMotor.LEFT_REAR)
             .IMU_HardwareMapName(RobotConfig.Imu.NAME)
             .IMU_Orientation(RobotConfig.Imu.ORIENTATION)
-            .strafePodX(-20 * 0.393701)
+            .strafePodX(20 * 0.393701)
             .forwardPodY(0)
-            .strafeEncoderDirection(Encoder.FORWARD)
-            .forwardEncoderDirection(Encoder.FORWARD);
+            .strafeEncoderDirection(Encoder.REVERSE)
+            .forwardEncoderDirection(Encoder.REVERSE);
+//            .forwardTicksToInches(5.36426);
+//            .strafeTicksToInches(40/155);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
