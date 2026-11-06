@@ -1,4 +1,16 @@
 # FTC Program Template
+
+## SDK and Requirements
+
+- FTC SDK: 12.0 (BIOBUZZ 2026–2027)
+- Android Studio: Narwhal 3 Feature Drop or later
+- Gradle: 9.1.0 / Android Gradle Plugin: 8.13.2
+- [Official SDK release notes](https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/v12.0/README.md#release-information)
+
+SDK 12.0 changes the AprilTag detection API. When adding existing AprilTag OpModes, follow the migration instructions in the official release notes.
+
+SDK 12.0ではAprilTag検出APIが変更されています。既存のAprilTag用OpModeを追加する場合は、公式リリースノートの移行手順を確認してください。
+
 ## Introduction
 This template provides a program structure for FTC (FIRST Tech Challenge) robot programming using a State mechanism.
 By utilizing the State mechanism, you can centrally manage the robot's state, making data sharing and control among various components more efficient.
